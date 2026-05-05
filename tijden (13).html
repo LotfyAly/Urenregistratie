@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tijden</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='42' fill='%23f8f8f6' stroke='%231c1917' stroke-width='6'/><line x1='50' y1='50' x2='50' y2='22' stroke='%231c1917' stroke-width='7' stroke-linecap='round'/><line x1='50' y1='50' x2='72' y2='50' stroke='%23b45309' stroke-width='6' stroke-linecap='round'/><circle cx='50' cy='50' r='3' fill='%231c1917'/></svg>" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #f8f8f6;
+    --bg-gradient: rgba(180, 83, 9, 0.05);
+    --surface: #ffffff;
+    --surface-hover: #f0efea;
+    --surface-sunken: #f0efea;
+    --border-light: #ecebe6;
+    --border: #e1ddd5;
+    --border-dashed: #d6d2c8;
+    --text-primary: #1c1917;
+    --text-secondary: #44403c;
+    --text-tertiary: #78716c;
+    --text-muted: #a8a29e;
+    --text-disabled: #c9c4ba;
+    --accent: #b45309;
+    --danger: #b91c1c;
+    --danger-soft: rgba(185, 28, 28, 0.08);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: var(--bg);
+    background-image: radial-gradient(ellipse at top, var(--bg-gradient) 0%, transparent 55%);
+    color: var(--text-primary);
+    font-family: "DM Sans", system-ui, sans-serif;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input { font-family: inherit; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+  .app { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  .header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 40px; }
+  .title { font-family: "Fraunces", serif; font-size: 2.5rem; font-weight: 500; letter-spacing: -0.02em; line-height: 1; margin: 0; color: var(--text-primary); }
+  .date { font-size: 0.875rem; margin-top: 8px; color: var(--text-tertiary); }
+  .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-tertiary); }
+  .total-today { font-family: "Fraunces", serif; font-size: 1.5rem; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+
+  .timer-card { border-radius: 1rem; padding: 24px; transition: all 0.2s; border: 1px solid var(--border); background: var(--surface); }
+  .timer-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 12px; }
+  .timer-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .timer-name { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.15em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .timer-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+  .icon-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px; border-radius: 8px; background: transparent; border: none; color: var(--text-tertiary); font-size: 0.75rem; transition: background 0.15s, color 0.15s; }
+  .icon-btn:hover { background: var(--surface-hover); color: var(--text-secondary); }
+  .icon-btn.danger { color: var(--danger); }
+  .icon-btn.danger:hover { background: var(--danger-soft); color: var(--danger); }
+
+  .section { margin-top: 40px; }
+  .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
+  .project-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; transition: background 0.15s; border: 1px solid transparent; }
+  .project-row .row-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.15s; }
+  .project-row:hover .row-actions { opacity: 1; }
+  .project-row.is-editing { flex-wrap: wrap; gap: 8px; }
+  .project-name-btn { flex: 1; text-align: left; background: transparent; border: none; color: var(--text-secondary); font-size: 1rem; padding: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .project-time { font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+  .project-mini { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .play-btn { padding: 6px; border-radius: 6px; border: none; display: inline-flex; align-items: center; }
+  .new-project { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); }
+  .new-project input { flex: 1; background: transparent; border: none; outline: none; font-size: 1rem; color: var(--text-primary); }
+  .new-project input::placeholder { color: var(--text-muted); }
+  .new-project svg { color: var(--text-tertiary); }
+  .add-btn { font-size: 0.75rem; padding: 4px 12px; border-radius: 6px; background: var(--text-primary); color: var(--surface); border: none; }
+
+  /* Kleur swatcher */
+  .color-swatches { display: flex; gap: 6px; align-items: center; width: 100%; padding: 2px 0 4px; flex-wrap: wrap; }
+  .color-swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; flex-shrink: 0; position: relative; }
+  .color-swatch:hover { transform: scale(1.15); }
+  .color-swatch.selected { border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text-primary); }
+  .color-swatch.selected::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: rgba(255,255,255,0.45); }
+  .color-input-wrap { position: relative; width: 20px; height: 20px; flex-shrink: 0; cursor: pointer; border-radius: 50%; overflow: hidden; border: 2px dashed var(--border-strong); display: flex; align-items: center; justify-content: center; transition: border-color 0.15s; }
+  .color-input-wrap:hover { border-color: var(--text-tertiary); }
+  .color-input-wrap.custom-active { border-style: solid; border-color: var(--text-primary); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text-primary); }
+  .color-input-wrap input[type=color] { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); opacity: 0; cursor: pointer; }
+
+  .empty-state { font-size: 0.875rem; padding: 32px; text-align: center; border-radius: 8px; color: var(--text-tertiary); border: 1px dashed var(--border-dashed); }
+  .footer { margin-top: 48px; text-align: center; font-size: 0.75rem; color: var(--text-muted); }
+
+  /* Week kolommen */
+  .week-card { border-radius: 12px; padding: 20px; background: var(--surface); border: 1px solid var(--border); }
+  .week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--border-light); gap: 12px; }
+  .week-label-area { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .week-label-num { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-tertiary); }
+  .week-label-dates { font-family: "Fraunces", serif; font-size: 1rem; font-weight: 500; color: var(--text-primary); }
+  .week-arrows { display: flex; gap: 4px; flex-shrink: 0; }
+  .week-arrow { padding: 6px; border-radius: 6px; background: transparent; border: 1px solid var(--border); color: var(--text-tertiary); cursor: pointer; display: flex; align-items: center; transition: background 0.15s, color 0.15s; }
+  .week-arrow:hover:not(:disabled) { background: var(--surface-hover); color: var(--text-primary); }
+  .week-arrow:disabled { opacity: 0.4; cursor: not-allowed; }
+  .week-arrow-now { font-size: 0.7rem; padding: 6px 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+  .week-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 18px; }
+  .day-col { display: flex; flex-direction: column; padding: 14px 8px; border-radius: 10px; transition: background 0.15s; }
+  .day-col.today { background: rgba(180, 83, 9, 0.06); }
+  .day-header { text-align: center; margin-bottom: 14px; }
+  .day-name { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-tertiary); font-weight: 600; }
+  .day-col.today .day-name { color: var(--accent); }
+  .day-date { display: block; font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+  .day-bar-wrap { height: 140px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 14px; position: relative; }
+  .day-bar-guide { position: absolute; left: 50%; transform: translateX(-50%); width: 36px; height: 1px; background: var(--border-light); pointer-events: none; }
+  .day-bar { width: 22px; display: flex; flex-direction: column-reverse; border-radius: 4px; overflow: hidden; min-height: 2px; }
+  .day-bar-segment { width: 100%; transition: flex-basis 0.25s ease-out; }
+  .day-bar-empty { width: 22px; height: 4px; background: var(--surface-sunken); border-radius: 999px; }
+  .day-total { text-align: center; font-family: "Fraunces", serif; font-size: 1rem; font-weight: 500; color: var(--text-primary); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+  .day-total.zero { color: var(--text-disabled); font-weight: 400; font-family: "DM Sans", sans-serif; font-size: 0.875rem; margin-bottom: 12px; }
+  .day-total-real { text-align: center; font-size: 0.7rem; color: var(--text-muted); font-variant-numeric: tabular-nums; margin-bottom: 12px; letter-spacing: 0.02em; }
+  .day-projects { display: flex; flex-direction: column; gap: 5px; padding-top: 10px; border-top: 1px solid var(--border-light); min-height: 1px; }
+  .day-project-item { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: var(--text-secondary); line-height: 1.25; }
+  .day-project-item .ddot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .day-project-item .pname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .day-project-item .phours { font-variant-numeric: tabular-nums; color: var(--text-tertiary); flex-shrink: 0; }
+
+  .week-total-row { display: flex; align-items: baseline; justify-content: space-between; padding: 14px 8px 4px; margin-top: 8px; border-top: 1px solid var(--border-light); }
+  .week-total-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); }
+  .week-total-value { font-family: "Fraunces", serif; font-size: 1.25rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .week-total-real { font-size: 0.72rem; color: var(--text-muted); font-variant-numeric: tabular-nums; margin-top: 2px; letter-spacing: 0.02em; }
+
+  @media (max-width: 560px) {
+    .week-grid { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 8px; }
+    .day-col { min-width: 110px; flex-shrink: 0; }
+  }
+
+  /* Check-in */
+  .checkin-overlay { position: fixed; inset: 0; background: rgba(28, 25, 23, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadeIn 0.2s ease-out; }
+  .checkin-dialog { background: var(--surface); border-radius: 18px; padding: 28px; max-width: 420px; width: 100%; box-shadow: 0 24px 64px rgba(28, 25, 23, 0.18); border: 1px solid var(--border); animation: slideIn 0.25s ease-out; }
+  .checkin-time { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-tertiary); margin-bottom: 6px; }
+  .checkin-question { font-family: "Fraunces", serif; font-size: 1.5rem; font-weight: 500; line-height: 1.25; letter-spacing: -0.01em; color: var(--text-primary); margin: 0 0 20px; }
+  .checkin-active { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 10px; margin-bottom: 20px; }
+  .checkin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { font-family: inherit; font-size: 0.875rem; padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; transition: background 0.15s, color 0.15s, opacity 0.15s; }
+  .btn-primary { background: var(--text-primary); color: var(--surface); }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: var(--surface-sunken); color: var(--text-primary); }
+  .btn-secondary:hover { background: var(--border-light); }
+  .btn-tertiary { background: transparent; color: var(--text-tertiary); }
+  .btn-tertiary:hover { color: var(--danger); }
+  .checkin-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; max-height: 280px; overflow-y: auto; }
+  .checkin-list-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; background: transparent; border: 1px solid var(--border-light); cursor: pointer; font-family: inherit; font-size: 0.875rem; color: var(--text-primary); width: 100%; text-align: left; transition: background 0.15s; }
+  .checkin-list-item:hover { background: var(--surface-hover); }
+  .checkin-list-item.current { background: var(--surface-sunken); }
+
+  /* PiP collapsed style */
+  .pip-collapsed { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: none; cursor: pointer; padding: 0; position: relative; transition: background 0.15s; }
+  .pip-collapsed:hover { background: var(--surface-hover); }
+  .pip-collapsed-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Drag & drop handle */
+  .drag-handle { display: flex; align-items: center; padding: 4px 2px; color: var(--text-disabled); cursor: grab; flex-shrink: 0; border-radius: 4px; transition: color 0.15s; }
+  .drag-handle:hover { color: var(--text-tertiary); }
+  .drag-handle:active { cursor: grabbing; }
+  .project-row.dragging { opacity: 0.4; }
+  .project-row.drag-over { background: var(--surface-hover) !important; border-color: var(--border-strong) !important; }
+
+  /* Todo list */
+  .todo-area { margin-top: 16px; border-top: 1px solid var(--border-light); padding-top: 16px; }
+  .todo-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-tertiary); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .todo-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+  .todo-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; border-radius: 7px; transition: background 0.1s; }
+  .todo-item:hover { background: var(--surface-hover); }
+  .todo-item:hover .todo-delete { opacity: 1; }
+  .todo-check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border-strong); appearance: none; -webkit-appearance: none; cursor: pointer; flex-shrink: 0; margin-top: 1px; background: var(--surface); transition: background 0.15s, border-color 0.15s; position: relative; }
+  .todo-check:checked { background: var(--accent); border-color: var(--accent); }
+  .todo-check:checked::after { content: ''; position: absolute; left: 3px; top: 1px; width: 5px; height: 8px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(40deg); }
+  .todo-text { flex: 1; font-size: 0.875rem; color: var(--text-primary); line-height: 1.45; word-break: break-word; min-width: 0; transition: color 0.15s; }
+  .todo-text.done { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--text-disabled); }
+  .todo-delete { opacity: 0; background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; border-radius: 4px; display: flex; align-items: center; flex-shrink: 0; transition: opacity 0.15s, color 0.15s; }
+  .todo-delete:hover { color: var(--danger); }
+  .todo-add { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 7px; border: 1px dashed var(--border-dashed); transition: border-color 0.15s; }
+  .todo-add:focus-within { border-color: var(--text-tertiary); border-style: solid; }
+  .todo-add input { flex: 1; background: transparent; border: none; outline: none; font-size: 0.875rem; color: var(--text-primary); font-family: inherit; }
+  .todo-add input::placeholder { color: var(--text-muted); }
+  .todo-progress { font-size: 0.7rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+  /* PiP todo (compact) */
+  .pip-todo-area { margin-bottom: 10px; }
+  .pip-todo-item { display: flex; align-items: flex-start; gap: 7px; padding: 4px 6px; border-radius: 5px; }
+  .pip-todo-item:hover { background: var(--surface-hover); }
+  .pip-todo-item:hover .pip-todo-del { opacity: 1; }
+  .pip-todo-check { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid var(--border-strong); appearance: none; -webkit-appearance: none; cursor: pointer; flex-shrink: 0; margin-top: 1px; background: var(--surface); transition: background 0.15s, border-color 0.15s; position: relative; }
+  .pip-todo-check:checked { background: var(--accent); border-color: var(--accent); }
+  .pip-todo-check:checked::after { content: ''; position: absolute; left: 2px; top: 0px; width: 4px; height: 6px; border: 1.5px solid white; border-top: none; border-left: none; transform: rotate(40deg); }
+  .pip-todo-text { flex: 1; font-size: 11px; color: var(--text-primary); line-height: 1.35; word-break: break-word; }
+  .pip-todo-text.done { color: var(--text-muted); text-decoration: line-through; }
+  .pip-todo-del { opacity: 0; background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 1px; border-radius: 3px; display: flex; align-items: center; flex-shrink: 0; transition: opacity 0.15s, color 0.15s; line-height: 1; }
+  .pip-todo-del:hover { color: var(--danger); }
+  .pip-todo-add { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 5px; border: 1px dashed var(--border-dashed); margin-top: 4px; }
+  .pip-todo-add input { flex: 1; background: transparent; border: none; outline: none; font-size: 11px; color: var(--text-primary); font-family: inherit; }
+  .pip-todo-add input::placeholder { color: var(--text-muted); }
+
+  /* Export modal */
+  .export-btn { padding: 6px 12px; border-radius: 6px; background: transparent; border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; font-family: inherit; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; transition: background 0.15s, color 0.15s; }
+  .export-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(28, 25, 23, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadeIn 0.2s ease-out; }
+  .modal-dialog { background: var(--surface); border-radius: 18px; padding: 28px; max-width: 440px; width: 100%; box-shadow: 0 24px 64px rgba(28, 25, 23, 0.18); border: 1px solid var(--border); animation: slideIn 0.25s ease-out; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .modal-title { font-family: "Fraunces", serif; font-size: 1.5rem; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-primary); margin: 0; }
+  .modal-subtitle { font-size: 0.8rem; color: var(--text-tertiary); margin-bottom: 24px; }
+  .toggle-group { display: inline-flex; padding: 3px; background: var(--surface-sunken); border-radius: 8px; gap: 2px; }
+  .toggle-btn { padding: 7px 14px; border-radius: 6px; background: transparent; border: none; color: var(--text-tertiary); font-family: inherit; font-size: 0.875rem; cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .toggle-btn.active { background: var(--surface); color: var(--text-primary); box-shadow: 0 1px 3px rgba(28, 25, 23, 0.08); font-weight: 500; }
+  .toggle-btn:hover:not(.active) { color: var(--text-secondary); }
+  .export-summary { margin: 20px 0; padding: 14px 16px; background: var(--surface-sunken); border-radius: 10px; border: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 6px; }
+  .export-summary-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; }
+  .export-summary-row .proj { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); }
+  .export-summary-row .hrs { font-family: "Fraunces", serif; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .export-summary-total { display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--border); }
+  .export-summary-total .lbl { color: var(--text-tertiary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; }
+  .export-summary-total .val { font-family: "Fraunces", serif; font-size: 1.1rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .export-summary-empty { color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 8px 0; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+const { createPortal } = ReactDOM;
+
+const db = {
+  async getProjects() { try { return JSON.parse(localStorage.getItem('tijden:projects') || '[]'); } catch { return []; } },
+  async saveProjects(p) { localStorage.setItem('tijden:projects', JSON.stringify(p)); },
+  async getSessions() { try { return JSON.parse(localStorage.getItem('tijden:sessions') || '[]'); } catch { return []; } },
+  async saveSessions(s) { localStorage.setItem('tijden:sessions', JSON.stringify(s)); },
+};
+
+// Iconen
+const Svg = ({ children, size = 14, fill = 'none' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+);
+const Play   = (p) => <Svg {...p}><polygon points="5 3 19 12 5 21 5 3"/></Svg>;
+const Square = (p) => <Svg {...p}><rect width="14" height="14" x="5" y="5" rx="1"/></Svg>;
+const Plus   = (p) => <Svg {...p}><path d="M5 12h14"/><path d="M12 5v14"/></Svg>;
+const Pencil = (p) => <Svg {...p}><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></Svg>;
+const Trash2 = (p) => <Svg {...p}><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></Svg>;
+const Ext    = (p) => <Svg {...p}><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></Svg>;
+const Close  = (p) => <Svg {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Svg>;
+const Check  = (p) => <Svg {...p}><polyline points="20 6 9 17 4 12"/></Svg>;
+const ChevR  = (p) => <Svg {...p}><path d="m9 18 6-6-6-6"/></Svg>;
+const ChevL  = (p) => <Svg {...p}><path d="m15 18-6-6 6-6"/></Svg>;
+const Min    = (p) => <Svg {...p}><path d="M5 12h14"/></Svg>;
+const Grip   = (p) => <Svg {...p}><circle cx="9" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="9" cy="19" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="19" r="1" fill="currentColor" stroke="none"/></Svg>;
+const XSmall = (p) => <Svg {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Svg>;
+
+const COLORS = [
+  { dot: '#b45309', soft: 'rgba(180,83,9,0.13)',   ring: 'rgba(180,83,9,0.4)'   }, // amber
+  { dot: '#047857', soft: 'rgba(4,120,87,0.13)',    ring: 'rgba(4,120,87,0.4)'   }, // emerald
+  { dot: '#be123c', soft: 'rgba(190,18,60,0.12)',   ring: 'rgba(190,18,60,0.4)'  }, // rose
+  { dot: '#0369a1', soft: 'rgba(3,105,161,0.13)',   ring: 'rgba(3,105,161,0.4)'  }, // sky
+  { dot: '#6d28d9', soft: 'rgba(109,40,217,0.13)',  ring: 'rgba(109,40,217,0.4)' }, // violet
+  { dot: '#4d7c0f', soft: 'rgba(77,124,15,0.14)',   ring: 'rgba(77,124,15,0.4)'  }, // lime
+  { dot: '#0e7490', soft: 'rgba(14,116,144,0.13)',  ring: 'rgba(14,116,144,0.4)' }, // cyan
+  { dot: '#c2410c', soft: 'rgba(194,65,12,0.13)',   ring: 'rgba(194,65,12,0.4)'  }, // orange
+  { dot: '#b91c1c', soft: 'rgba(185,28,28,0.12)',   ring: 'rgba(185,28,28,0.4)'  }, // red
+  { dot: '#1d4ed8', soft: 'rgba(29,78,216,0.13)',   ring: 'rgba(29,78,216,0.4)'  }, // blue
+  { dot: '#7c3aed', soft: 'rgba(124,58,237,0.13)',  ring: 'rgba(124,58,237,0.4)' }, // purple
+  { dot: '#0f766e', soft: 'rgba(15,118,110,0.13)',  ring: 'rgba(15,118,110,0.4)' }, // teal
+];
+
+const getColor = (i) => COLORS[i % COLORS.length];
+
+// Maak een kleur-object van willekeurige hex (voor eigen kleuren)
+const colorFromHex = (hex) => {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return { dot: hex, soft: `rgba(${r},${g},${b},0.13)`, ring: `rgba(${r},${g},${b},0.4)` };
+};
+
+// Gebruik opgeslagen hex-kleur van project, val terug op index-gebaseerde kleur
+const getProjectColor = (project, fallbackIdx) => {
+  if (project && project.colorHex) return colorFromHex(project.colorHex);
+  return COLORS[(fallbackIdx ?? 0) % COLORS.length];
+};
+const startOfToday = () => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); };
+const uuid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+
+const formatTimer = (ms) => {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+};
+const formatHM = (ms) => {
+  const totalMin = Math.floor(ms / 60000);
+  const h = Math.floor(totalMin / 60), m = totalMin % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h} uur`;
+  return `${h}u ${m}m`;
+};
+const formatHMS = (ms) => {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const sec = totalSec % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+};
+const msToHours = (ms) => ms / 3600000;
+const roundToHalf = (h) => Math.round(h * 2) / 2;
+const fmtHours = (h) => h.toFixed(1).replace('.', ',') + 'u';
+const formatTimeShort = (date) => `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+const formatDateNL = (d) => {
+  const days = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+  const months = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+};
+const monthShort = (i) => ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'][i];
+
+const getMondayOf = (offset) => {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const day = today.getDay() || 7;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - day + 1 + offset * 7);
+  return monday;
+};
+const isoWeekNumber = (d) => {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+};
+
+// Per-dag verdeling — afronden op halve uren, geen forceren naar 8u
+const computeDistribution = (perProjectMs, projects) => {
+  const items = projects
+    .map(p => ({ id: p.id, name: p.name, hoursRaw: msToHours(perProjectMs.get(p.id) || 0) }))
+    .filter(x => x.hoursRaw > 0);
+  if (items.length === 0) return { fitted: [], totalFitted: 0 };
+  const rounded = items.map(x => ({ ...x, hoursFitted: roundToHalf(x.hoursRaw) }));
+  // Items die naar 0 afronden (sessies < 15 min) verbergen we voor de leesbaarheid
+  const visible = rounded.filter(x => x.hoursFitted > 0);
+  const totalFitted = visible.reduce((a, x) => a + x.hoursFitted, 0);
+  return { fitted: visible, totalFitted };
+};
+
+// =========================================================
+// EXPORT HELPERS
+// =========================================================
+const padDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const dayOfWeekNL = (d) => ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'][d.getDay()];
+const monthNL = (d) => ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'][d.getMonth()];
+
+// Sessies die overlappen met [start, end) — gesorteerd op starttijd, geknipt op grenzen
+const sessionsInRange = (sessions, start, end, now) => {
+  return sessions
+    .filter(s => {
+      const sEnd = s.endTime ?? now;
+      return sEnd > start && s.startTime < end;
+    })
+    .map(s => {
+      const sEnd = s.endTime ?? now;
+      return {
+        ...s,
+        clippedStart: Math.max(s.startTime, start),
+        clippedEnd: Math.min(sEnd, end),
+      };
+    })
+    .sort((a, b) => a.clippedStart - b.clippedStart);
+};
+
+// Bouw dag-blocks (datum, sessies per project, totalen) voor een gegeven set dagen
+const buildDayBlocks = (dates, projects, sessions, now) => {
+  return dates.map(date => {
+    const start = date.getTime();
+    const end = start + 86400000;
+    const inRange = sessionsInRange(sessions, start, end, now);
+    // Groepeer per project
+    const byProjectMap = new Map();
+    for (const s of inRange) {
+      if (!byProjectMap.has(s.projectId)) byProjectMap.set(s.projectId, []);
+      byProjectMap.get(s.projectId).push(s);
+    }
+    // Totale ms per project (geclipt) voor afronden
+    const perProject = new Map();
+    projects.forEach(p => perProject.set(p.id, 0));
+    let totalMs = 0;
+    for (const s of inRange) {
+      const dur = s.clippedEnd - s.clippedStart;
+      perProject.set(s.projectId, (perProject.get(s.projectId) || 0) + dur);
+      totalMs += dur;
+    }
+    const dist = computeDistribution(perProject, projects);
+    // Bouw byProject lijst (alleen projecten met afgeronde uren > 0, en geprojecteerde sessies)
+    const byProject = dist.fitted
+      .map(x => ({
+        ...x,
+        ms: perProject.get(x.id) || 0,
+        sessions: byProjectMap.get(x.id) || [],
+      }))
+      .sort((a, b) => b.hoursFitted - a.hoursFitted);
+    return { date, totalMs, totalFitted: dist.totalFitted, byProject };
+  });
+};
+
+const C = {
+  bg: 'var(--bg)', surface: 'var(--surface)', surfaceHover: 'var(--surface-hover)', surfaceSunken: 'var(--surface-sunken)',
+  border: 'var(--border)', borderLight: 'var(--border-light)',
+  textPrimary: 'var(--text-primary)', textSecondary: 'var(--text-secondary)', textTertiary: 'var(--text-tertiary)',
+  textMuted: 'var(--text-muted)', textDisabled: 'var(--text-disabled)',
+  accent: 'var(--accent)', danger: 'var(--danger)',
+};
+
+// =========================================================
+// MAIN APP
+// =========================================================
+function App() {
+  const [projects, setProjects] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editColorHex, setEditColorHex] = useState(COLORS[0].dot);
+  const [newName, setNewName] = useState('');
+  const [pipWindow, setPipWindow] = useState(null);
+  const [pipContainer, setPipContainer] = useState(null);
+  const [pipCollapsed, setPipCollapsed] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+
+  // Houd actuele sessions vast voor switchTo/delete (voorkomt stale closure bij snelle klikken)
+  const sessionsRef = useRef([]);
+  useEffect(() => { sessionsRef.current = sessions; }, [sessions]);
+
+  const [checkInDialog, setCheckInDialog] = useState(null);
+  const [checkInMode, setCheckInMode] = useState('ask');
+  const checkInsRef = useRef(new Set());
+
+  useEffect(() => {
+    const i = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(i);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const [p, s] = await Promise.all([db.getProjects(), db.getSessions()]);
+      setProjects(p); setSessions(s);
+      sessionsRef.current = s;
+      const today = new Date().toDateString();
+      try {
+        const saved = JSON.parse(localStorage.getItem(`tijden:checkins-${today}`) || '[]');
+        saved.forEach(k => checkInsRef.current.add(k));
+      } catch {}
+      setLoaded(true);
+    })();
+  }, []);
+
+  const activeSession = useMemo(() => sessions.find(s => !s.endTime) || null, [sessions]);
+  const activeProject = useMemo(() => activeSession ? projects.find(p => p.id === activeSession.projectId) : null, [activeSession, projects]);
+
+  // Halfuurlijkse check-in
+  useEffect(() => {
+    const checkNow = () => {
+      if (!activeSession || checkInDialog) return;
+      const d = new Date();
+      const day = d.getDay();
+      if (day === 0 || day === 6) return;
+      const h = d.getHours(), m = d.getMinutes();
+      if (h < 8 || h >= 17) return;
+      if (m !== 0 && m !== 30) return;
+      if (h === 8 && m === 0) return;
+      const today = d.toDateString();
+      const key = `${today}-${h}-${m}`;
+      if (checkInsRef.current.has(key)) return;
+      checkInsRef.current.add(key);
+      try { localStorage.setItem(`tijden:checkins-${today}`, JSON.stringify(Array.from(checkInsRef.current).filter(k => k.startsWith(today)))); } catch {}
+      setCheckInMode('ask');
+      setCheckInDialog({ time: d, projectId: activeSession.projectId });
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        try {
+          const proj = projects.find(p => p.id === activeSession.projectId);
+          new Notification('Tijden — check-in', { body: `Ben je nog bezig met ${proj?.name ?? 'dit project'}?` });
+        } catch {}
+      }
+    };
+    const i = setInterval(checkNow, 30000);
+    checkNow();
+    return () => clearInterval(i);
+  }, [activeSession, checkInDialog, projects]);
+
+  const todayStart = startOfToday();
+  const todayPerProject = useMemo(() => {
+    const map = new Map();
+    projects.forEach(p => map.set(p.id, 0));
+    sessions.forEach(s => {
+      const sStart = Math.max(s.startTime, todayStart);
+      const sEnd = Math.min(s.endTime ?? now, todayStart + 86400000);
+      if (sEnd > sStart) map.set(s.projectId, (map.get(s.projectId) || 0) + (sEnd - sStart));
+    });
+    return map;
+  }, [sessions, projects, todayStart, now]);
+
+  const totalTodayMs = useMemo(() => {
+    let t = 0; todayPerProject.forEach(v => t += v); return t;
+  }, [todayPerProject]);
+
+  // Acties
+  const addProject = async () => {
+    const name = newName.trim();
+    if (!name) return;
+    const next = [...projects, { id: uuid(), name, createdAt: Date.now() }];
+    setProjects(next); setNewName('');
+    await db.saveProjects(next);
+  };
+  const renameProject = async (id, name, colorHex) => {
+    const next = projects.map(p => p.id === id ? { ...p, name: name.trim() || p.name, colorHex } : p);
+    setProjects(next); setEditingId(null);
+    await db.saveProjects(next);
+  };
+  const deleteProject = async (id) => {
+    if (!confirm('Project verwijderen?')) return;
+    const nextProjects = projects.filter(p => p.id !== id);
+    const current = sessionsRef.current;
+    const active = current.find(s => !s.endTime);
+    if (active && active.projectId === id) {
+      const nextSessions = current.map(s => s.id === active.id ? { ...s, endTime: Date.now() } : s);
+      setSessions(nextSessions);
+      sessionsRef.current = nextSessions;
+      await db.saveSessions(nextSessions);
+    }
+    setProjects(nextProjects);
+    await db.saveProjects(nextProjects);
+  };
+  const switchTo = async (projectId) => {
+    // Lees actuele state via ref (niet via stale closure) zodat snelle klikken correct stapelen
+    const current = sessionsRef.current;
+    const active = current.find(s => !s.endTime) || null;
+    // No-op: klikken op het al actieve project doet niets (gebruik Stop om te stoppen)
+    if (projectId && active && active.projectId === projectId) return;
+    const t = Date.now(); // één enkele timestamp voor end + start zodat er geen gat ontstaat
+    let next = current;
+    if (active) next = next.map(s => s.id === active.id ? { ...s, endTime: t } : s);
+    if (projectId) next = [...next, { id: uuid(), projectId, startTime: t, endTime: null, todos: [] }];
+    setSessions(next);
+    sessionsRef.current = next; // direct bijwerken zodat opvolgende calls de nieuwe state zien
+    await db.saveSessions(next);
+  };
+  const stopTimer = () => switchTo(null);
+
+  // Todo's bijwerken op een specifieke sessie — direct opgeslagen
+  const updateSessionTodos = (sessionId, todos) => {
+    const current = sessionsRef.current;
+    const next = current.map(s => s.id === sessionId ? { ...s, todos } : s);
+    setSessions(next);
+    sessionsRef.current = next;
+    db.saveSessions(next).catch(console.error);
+  };
+
+  // Herordenen van projecten via drag & drop
+  const reorderProjects = async (fromId, toId) => {
+    if (fromId === toId) return;
+    const fromIdx = projects.findIndex(p => p.id === fromId);
+    const toIdx   = projects.findIndex(p => p.id === toId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const next = [...projects];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    setProjects(next);
+    await db.saveProjects(next);
+  };
+
+  // PiP
+  const PIP_EXPANDED = { w: 320, h: 380 };
+  const PIP_COLLAPSED = { w: 72, h: 88 };
+
+  const openPip = async () => {
+    if (!('documentPictureInPicture' in window)) {
+      alert('Picture-in-Picture wordt niet ondersteund. Gebruik Chrome of Edge (versie 116+).');
+      return;
+    }
+    try {
+      const win = await window.documentPictureInPicture.requestWindow(PIP_EXPANDED);
+      [...document.styleSheets].forEach(sheet => {
+        try {
+          if (sheet.cssRules) {
+            const styleEl = win.document.createElement('style');
+            styleEl.textContent = [...sheet.cssRules].map(r => r.cssText).join('\n');
+            win.document.head.appendChild(styleEl);
+          }
+        } catch {
+          if (sheet.href) { const link = win.document.createElement('link'); link.rel='stylesheet'; link.href=sheet.href; win.document.head.appendChild(link); }
+        }
+      });
+      win.document.documentElement.style.background = '#f8f8f6';
+      win.document.body.style.margin = '0';
+      win.document.body.style.background = '#f8f8f6';
+      win.document.body.style.color = '#1c1917';
+      win.document.body.style.fontFamily = '"DM Sans", system-ui, sans-serif';
+      const container = win.document.createElement('div');
+      win.document.body.appendChild(container);
+      win.addEventListener('pagehide', () => { setPipWindow(null); setPipContainer(null); setPipCollapsed(false); });
+      setPipWindow(win); setPipContainer(container); setPipCollapsed(false);
+    } catch (e) { console.error(e); }
+  };
+  const closePip = () => { if (pipWindow) pipWindow.close(); };
+
+  const togglePipCollapse = () => {
+    if (!pipWindow) return;
+    const next = !pipCollapsed;
+    try {
+      if (next) pipWindow.resizeTo(PIP_COLLAPSED.w, PIP_COLLAPSED.h);
+      else pipWindow.resizeTo(PIP_EXPANDED.w, PIP_EXPANDED.h);
+    } catch (e) { console.warn('PiP resize niet ondersteund:', e); }
+    setPipCollapsed(next);
+  };
+
+  const enableNotifications = async () => {
+    if (typeof Notification === 'undefined') { alert('Notificaties worden niet ondersteund.'); return; }
+    if (Notification.permission === 'granted') { alert('Notificaties staan al aan.'); return; }
+    if (Notification.permission === 'denied') { alert('Notificaties zijn geblokkeerd. Pas dit aan in je browserinstellingen.'); return; }
+    try { await Notification.requestPermission(); } catch (e) { console.error(e); }
+  };
+
+  if (!loaded) return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',color:C.textTertiary}}>Laden…</div>;
+
+  const today = new Date();
+  const activeIndex = activeProject ? projects.findIndex(p => p.id === activeProject.id) : -1;
+  const activeColor = activeProject ? getProjectColor(activeProject, activeIndex) : null;
+  const activeMs = activeSession ? now - activeSession.startTime : 0;
+  const c = activeColor || { dot: 'var(--text-disabled)', soft: 'transparent', ring: 'var(--border)' };
+
+  return (
+    <div className="app">
+      <header className="header">
+        <div>
+          <h1 className="title">Tijden</h1>
+          <p className="date">{formatDateNL(today)}</p>
+        </div>
+        <div style={{textAlign:'right'}}>
+          <div className="label">Vandaag</div>
+          <div className="total-today">{formatHMS(totalTodayMs)}</div>
+        </div>
+      </header>
+
+      {/* Actieve timer */}
+      <div className="timer-card" style={{ background: activeProject ? c.soft : C.surface, border: `1px solid ${activeProject ? c.ring : 'var(--border)'}` }}>
+        <div className="timer-row">
+          <div className="timer-info">
+            <span className="dot" style={{ background: c.dot, boxShadow: activeProject ? `0 0 12px ${c.ring}` : 'none', animation: activeProject ? 'pulse 2s ease-in-out infinite' : 'none' }} />
+            <span className="timer-name" style={{ color: activeProject ? C.textSecondary : C.textMuted }}>
+              {activeProject ? activeProject.name : 'Geen actieve timer'}
+            </span>
+          </div>
+          <div className="timer-actions">
+            <button className="icon-btn" onClick={pipWindow ? closePip : openPip} title={pipWindow ? 'Sluit PiP' : 'Open PiP'}>
+              {pipWindow ? <Close size={14}/> : <Ext size={14}/>}<span>{pipWindow ? 'Sluit PiP' : 'PiP'}</span>
+            </button>
+            {activeProject && (
+              <button className="icon-btn danger" onClick={stopTimer}>
+                <Square size={12} fill="currentColor"/><span>Stop</span>
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="tabular" style={{ fontFamily:'"Fraunces", serif', fontSize:'4rem', fontWeight:400, letterSpacing:'-0.03em', lineHeight:1, color: activeProject ? C.textPrimary : C.textDisabled }}>
+          {formatTimer(activeMs)}
+        </div>
+        {activeSession && (
+          <TodoList
+            todos={activeSession.todos || []}
+            onChange={(todos) => updateSessionTodos(activeSession.id, todos)}
+          />
+        )}
+      </div>
+
+      {/* Projecten */}
+      <section className="section">
+        <h2 className="label" style={{margin:'0 0 16px'}}>Projecten</h2>
+        <ProjectList
+          projects={projects}
+          activeSession={activeSession}
+          todayPerProject={todayPerProject}
+          editingId={editingId}
+          editName={editName}
+          editColorHex={editColorHex}
+          onEdit={(id, name, colorHex) => { setEditingId(id); setEditName(name); setEditColorHex(colorHex); }}
+          onEditName={setEditName}
+          onEditColorHex={setEditColorHex}
+          onRename={renameProject}
+          onCancelEdit={() => setEditingId(null)}
+          onDelete={deleteProject}
+          onSwitch={switchTo}
+          onReorder={reorderProjects}
+        />
+        <div className="new-project">
+          <Plus size={14}/>
+          <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addProject()} placeholder="Nieuw project…" />
+          {newName && <button className="add-btn" onClick={addProject}>Toevoegen</button>}
+        </div>
+      </section>
+
+      {/* Week — samengevoegd */}
+      <section className="section">
+        <div className="section-header">
+          <h2 className="label" style={{margin:0}}>Werkweek</h2>
+          <button className="export-btn" onClick={() => setExportOpen(true)}>Exporteer</button>
+        </div>
+        <WeekColumns projects={projects} sessions={sessions} now={now} />
+      </section>
+
+      <footer className="footer">
+        Data wordt automatisch bewaard in deze browser. <button onClick={enableNotifications} style={{background:'transparent',border:'none',color:C.textTertiary,textDecoration:'underline',cursor:'pointer',font:'inherit',padding:0}}>Schakel notificaties in</button> voor de check-ins.
+      </footer>
+
+      {/* Check-in dialog */}
+      {checkInDialog && (
+        <CheckInDialog
+          time={checkInDialog.time}
+          projectId={checkInDialog.projectId}
+          projects={projects}
+          mode={checkInMode}
+          onContinue={() => setCheckInDialog(null)}
+          onSwitchMode={() => setCheckInMode('switch')}
+          onSwitch={async (id) => { await switchTo(id); setCheckInDialog(null); }}
+          onStop={async () => { await stopTimer(); setCheckInDialog(null); }}
+          onCancelSwitch={() => setCheckInMode('ask')}
+        />
+      )}
+
+      {/* PiP venster */}
+      {pipContainer && createPortal(
+        pipCollapsed
+          ? <PipCollapsed activeColor={activeColor} onExpand={togglePipCollapse} />
+          : <PipExpanded
+              activeSession={activeSession} activeProject={activeProject} activeColor={activeColor} activeMs={activeMs}
+              projects={projects} todayPerProject={todayPerProject} totalTodayMs={totalTodayMs}
+              onSwitch={switchTo} onStop={stopTimer} onCollapse={togglePipCollapse} onClose={closePip}
+              onUpdateTodos={updateSessionTodos}
+            />,
+        pipContainer
+      )}
+
+      {/* Export modal */}
+      {exportOpen && (
+        <ExportModal
+          projects={projects}
+          sessions={sessions}
+          now={now}
+          onClose={() => setExportOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// =========================================================
+// TODO LIST (volledig)
+// =========================================================
+function TodoList({ todos, onChange }) {
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef(null);
+
+  const addTodo = () => {
+    const text = draft.trim();
+    if (!text) return;
+    onChange([...todos, { id: uuid(), text, done: false }]);
+    setDraft('');
+  };
+
+  const toggle = (id) => onChange(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  const remove = (id) => onChange(todos.filter(t => t.id !== id));
+
+  const doneCount = todos.filter(t => t.done).length;
+  const total = todos.length;
+
+  return (
+    <div className="todo-area">
+      <div className="todo-label">
+        <span>Taken</span>
+        {total > 0 && <span className="todo-progress">{doneCount}/{total}</span>}
+      </div>
+      {todos.length > 0 && (
+        <div className="todo-list">
+          {todos.map(todo => (
+            <div key={todo.id} className="todo-item">
+              <input
+                type="checkbox"
+                className="todo-check"
+                checked={todo.done}
+                onChange={() => toggle(todo.id)}
+              />
+              <span className={`todo-text ${todo.done ? 'done' : ''}`}>{todo.text}</span>
+              <button className="todo-delete" onClick={() => remove(todo.id)} title="Verwijder">
+                <XSmall size={12}/>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="todo-add" onClick={() => inputRef.current?.focus()}>
+        <Plus size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }}/>
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') addTodo(); if (e.key === 'Escape') setDraft(''); }}
+          placeholder="Taak toevoegen…"
+        />
+      </div>
+    </div>
+  );
+}
+
+// =========================================================
+// PIP TODO LIST (compact)
+// =========================================================
+function PipTodoList({ todos, onChange }) {
+  const [draft, setDraft] = useState('');
+  const inputRef = useRef(null);
+
+  const addTodo = () => {
+    const text = draft.trim();
+    if (!text) return;
+    onChange([...todos, { id: uuid(), text, done: false }]);
+    setDraft('');
+  };
+  const toggle = (id) => onChange(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  const remove = (id) => onChange(todos.filter(t => t.id !== id));
+
+  return (
+    <div className="pip-todo-area">
+      {todos.map(todo => (
+        <div key={todo.id} className="pip-todo-item">
+          <input type="checkbox" className="pip-todo-check" checked={todo.done} onChange={() => toggle(todo.id)}/>
+          <span className={`pip-todo-text ${todo.done ? 'done' : ''}`}>{todo.text}</span>
+          <button className="pip-todo-del" onClick={() => remove(todo.id)}><XSmall size={10}/></button>
+        </div>
+      ))}
+      <div className="pip-todo-add" onClick={() => inputRef.current?.focus()}>
+        <Plus size={10} style={{ color: 'var(--text-muted)', flexShrink: 0 }}/>
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') addTodo(); if (e.key === 'Escape') setDraft(''); }}
+          placeholder="Taak toevoegen…"
+        />
+      </div>
+    </div>
+  );
+}
+
+// =========================================================
+// PROJECT LIST met drag & drop + kleur selectie
+// =========================================================
+function ProjectList({ projects, activeSession, todayPerProject, editingId, editName, editColorHex, onEdit, onEditName, onEditColorHex, onRename, onCancelEdit, onDelete, onSwitch, onReorder }) {
+  const dragId = useRef(null);
+  const [dragOverId, setDragOverId] = useState(null);
+
+  if (projects.length === 0) return <div className="empty-state">Nog geen projecten. Voeg er hieronder een toe.</div>;
+
+  // Is de actieve editColorHex een vaste swatch of een eigen kleur?
+  const isCustomColor = editColorHex && !COLORS.some(c => c.dot === editColorHex);
+
+  return (
+    <div>
+      {projects.map((p, i) => {
+        const col = getProjectColor(p, i);
+        const ms = todayPerProject.get(p.id) || 0;
+        const isActive = activeSession && activeSession.projectId === p.id;
+        const isEditing = editingId === p.id;
+        const isDragOver = dragOverId === p.id;
+
+        return (
+          <div
+            key={p.id}
+            className={`project-row ${isEditing ? 'is-editing' : ''} ${isDragOver ? 'drag-over' : ''}`}
+            style={{ background: isActive ? col.soft : 'transparent', borderColor: isActive && !isDragOver ? col.ring : isDragOver ? 'var(--border-strong)' : 'transparent' }}
+            draggable={!isEditing}
+            onDragStart={(e) => { dragId.current = p.id; e.dataTransfer.effectAllowed = 'move'; }}
+            onDragEnd={() => { dragId.current = null; setDragOverId(null); }}
+            onDragOver={(e) => { e.preventDefault(); if (dragId.current && dragId.current !== p.id) setDragOverId(p.id); }}
+            onDragLeave={() => setDragOverId(null)}
+            onDrop={(e) => { e.preventDefault(); if (dragId.current && dragId.current !== p.id) onReorder(dragId.current, p.id); setDragOverId(null); dragId.current = null; }}
+          >
+            {!isEditing && <span className="drag-handle" title="Versleep om te herordenen"><Grip size={14}/></span>}
+            <span className="project-mini" style={{ background: col.dot, boxShadow: isActive ? `0 0 8px ${col.ring}` : 'none', animation: isActive ? 'pulse 2s ease-in-out infinite' : 'none' }} />
+
+            {isEditing ? (
+              <>
+                {/* Naam + opslaan/annuleer */}
+                <input
+                  autoFocus value={editName}
+                  onChange={e => onEditName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') onRename(p.id, editName, editColorHex); if (e.key === 'Escape') onCancelEdit(); }}
+                  style={{flex:1,background:'transparent',border:'none',borderBottom:`1px solid ${C.border}`,outline:'none',color:C.textPrimary,fontSize:'1rem',padding:'2px 0'}}
+                />
+                <button className="icon-btn" onClick={() => onRename(p.id, editName, editColorHex)} title="Opslaan"><Check size={14}/></button>
+                <button className="icon-btn" onClick={onCancelEdit} title="Annuleer"><XSmall size={14}/></button>
+                {/* Kleur-swatcher (volledige breedte) */}
+                <div className="color-swatches">
+                  {COLORS.map((c) => (
+                    <button
+                      key={c.dot}
+                      className={`color-swatch ${editColorHex === c.dot ? 'selected' : ''}`}
+                      style={{ background: c.dot }}
+                      onClick={() => onEditColorHex(c.dot)}
+                      title={c.dot}
+                    />
+                  ))}
+                  {/* Eigen kleur-input */}
+                  <div
+                    className={`color-input-wrap ${isCustomColor ? 'custom-active' : ''}`}
+                    style={{ background: isCustomColor ? editColorHex : 'transparent' }}
+                    title="Eigen kleur kiezen"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isCustomColor ? '#fff' : 'var(--text-tertiary)'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/><circle cx="18" cy="6" r="4"/><path d="M18 4v4"/><path d="M16 6h4"/>
+                    </svg>
+                    <input
+                      type="color"
+                      value={isCustomColor ? editColorHex : '#b45309'}
+                      onChange={e => onEditColorHex(e.target.value)}
+                      title="Eigen kleur"
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <button className="project-name-btn" onClick={() => onSwitch(p.id)} style={{ color: isActive ? C.textPrimary : C.textSecondary }}>{p.name}</button>
+                <span className="project-time" style={{ color: ms > 0 ? C.textTertiary : C.textDisabled }}>{ms > 0 ? formatHMS(ms) : '—'}</span>
+                <div className="row-actions">
+                  <button className="icon-btn" onClick={() => onEdit(p.id, p.name, p.colorHex || COLORS[i % COLORS.length].dot)} title="Bewerk"><Pencil size={13}/></button>
+                  <button className="icon-btn" onClick={() => onDelete(p.id)} title="Verwijderen"><Trash2 size={13}/></button>
+                </div>
+                {!isActive && <button className="play-btn" onClick={() => onSwitch(p.id)} style={{ color: col.dot, background: col.soft }} title="Start"><Play size={13} fill={col.dot}/></button>}
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// =========================================================
+// CHECK-IN DIALOG
+// =========================================================
+function CheckInDialog({ time, projectId, projects, mode, onContinue, onSwitchMode, onSwitch, onStop, onCancelSwitch }) {
+  const project = projects.find(p => p.id === projectId);
+  const projIdx = projects.findIndex(p => p.id === projectId);
+  const col = project ? getProjectColor(project, projIdx) : null;
+
+  return (
+    <div className="checkin-overlay" onClick={(e) => { if (e.target === e.currentTarget) onContinue(); }}>
+      <div className="checkin-dialog">
+        {mode === 'ask' && (
+          <>
+            <div className="checkin-time">Check-in · {formatTimeShort(time)}</div>
+            <h3 className="checkin-question">Ben je nog bezig met dit project?</h3>
+            <div className="checkin-active" style={{ background: col?.soft || C.surfaceSunken, border: col ? `1px solid ${col.ring}` : `1px solid var(--border-light)` }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: col?.dot || C.textMuted, flexShrink: 0 }} />
+              <span style={{ color: C.textPrimary, fontWeight: 500 }}>{project?.name || 'Onbekend project'}</span>
+            </div>
+            <div className="checkin-actions">
+              <button className="btn btn-primary" onClick={onContinue}>Ja, doorgaan</button>
+              <button className="btn btn-secondary" onClick={onSwitchMode}>Switch project</button>
+              <button className="btn btn-tertiary" onClick={onStop}>Stop timer</button>
+            </div>
+          </>
+        )}
+        {mode === 'switch' && (
+          <>
+            <div className="checkin-time">Switch project</div>
+            <h3 className="checkin-question">Waar werk je nu aan?</h3>
+            <div className="checkin-list">
+              {projects.map((p, i) => {
+                const c2 = getProjectColor(p, i);
+                const isCurrent = p.id === projectId;
+                return (
+                  <button key={p.id} className={`checkin-list-item ${isCurrent ? 'current' : ''}`} onClick={() => onSwitch(p.id)}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: c2.dot, flexShrink: 0 }} />
+                    <span style={{ flex: 1 }}>{p.name}</span>
+                    {isCurrent && <span style={{ fontSize: '0.75rem', color: C.textTertiary }}>huidig</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="checkin-actions">
+              <button className="btn btn-tertiary" onClick={onCancelSwitch} style={{ color: C.textTertiary }}>← Terug</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =========================================================
+// WEEK COLUMNS — verticale dag-kolommen met balkje + project-uren
+// =========================================================
+function WeekColumns({ projects, sessions, now }) {
+  const [offset, setOffset] = useState(0);
+  const todayKey = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }, [now]);
+
+  const weekDates = useMemo(() => {
+    const monday = getMondayOf(offset);
+    return Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return d;
+    });
+  }, [offset]);
+
+  const days = useMemo(() => {
+    return weekDates.map(date => {
+      const start = date.getTime();
+      const end = start + 86400000;
+      const perProject = new Map();
+      projects.forEach(p => perProject.set(p.id, 0));
+      sessions.forEach(s => {
+        const sStart = s.startTime;
+        const sEnd = s.endTime ?? now;
+        if (sEnd <= start || sStart >= end) return;
+        const overlap = Math.min(sEnd, end) - Math.max(sStart, start);
+        if (overlap > 0) perProject.set(s.projectId, (perProject.get(s.projectId) || 0) + overlap);
+      });
+      let totalMs = 0; perProject.forEach(v => totalMs += v);
+      // Werkelijke project-lijst voor deze dag (alleen projecten met tijd)
+      const realList = projects
+        .map(p => ({ id: p.id, name: p.name, ms: perProject.get(p.id) || 0 }))
+        .filter(x => x.ms > 0);
+      const dist = computeDistribution(perProject, projects);
+      return { date, totalMs, realList, ...dist };
+    });
+  }, [weekDates, projects, sessions, now]);
+
+  const weekTotalFitted = days.reduce((sum, d) => sum + d.totalFitted, 0);
+  const weekTotalMs = days.reduce((sum, d) => sum + d.totalMs, 0);
+  const dayNamesShort = ['Ma', 'Di', 'Wo', 'Do', 'Vr'];
+  const weekNum = isoWeekNumber(weekDates[0]);
+  const labelDates = `${weekDates[0].getDate()} ${monthShort(weekDates[0].getMonth())} – ${weekDates[4].getDate()} ${monthShort(weekDates[4].getMonth())}`;
+  const weekTag = offset === 0 ? ' · deze week' : offset === -1 ? ' · vorige week' : offset === 1 ? ' · volgende week' : '';
+
+  return (
+    <div className="week-card">
+      <div className="week-nav">
+        <div className="week-label-area">
+          <span className="week-label-num">Week {weekNum}{weekTag}</span>
+          <span className="week-label-dates">{labelDates}</span>
+        </div>
+        <div className="week-arrows">
+          <button className="week-arrow" onClick={() => setOffset(o => o - 1)} title="Vorige week"><ChevL size={14}/></button>
+          <button className="week-arrow week-arrow-now" onClick={() => setOffset(0)} disabled={offset === 0} title="Deze week">Nu</button>
+          <button className="week-arrow" onClick={() => setOffset(o => o + 1)} title="Volgende week"><ChevR size={14}/></button>
+        </div>
+      </div>
+
+      <div className="week-grid">
+        {days.map((day, idx) => {
+          const isToday = day.date.getTime() === todayKey;
+          const hasData = day.totalMs > 0;
+          const hasRoundedData = day.fitted.length > 0;
+          // Schaal: 8u = volle 140px bar als baseline. Bij meer dan 8u groeit de schaal mee zodat alles past.
+          const wrapHeightPx = 140;
+          const dayScale = Math.max(8, day.totalFitted);
+          return (
+            <div key={idx} className={`day-col ${isToday ? 'today' : ''}`}>
+              <div className="day-header">
+                <span className="day-name">{dayNamesShort[idx]}</span>
+                <span className="day-date">{day.date.getDate()} {monthShort(day.date.getMonth())}</span>
+              </div>
+
+              <div className="day-bar-wrap">
+                <span className="day-bar-guide" />
+                {hasRoundedData ? (
+                  <div className="day-bar">
+                    {day.fitted.map(item => {
+                      const proj = projects.find(p => p.id === item.id);
+                      const projIdx = projects.findIndex(p => p.id === item.id);
+                      const col = proj ? getProjectColor(proj, projIdx) : COLORS[0];
+                      const segPx = (item.hoursFitted / dayScale) * wrapHeightPx;
+                      if (segPx <= 0) return null;
+                      return (
+                        <div
+                          key={item.id}
+                          className="day-bar-segment"
+                          style={{ height: `${segPx}px`, background: col.dot }}
+                          title={`${item.name}: ${fmtHours(item.hoursFitted)}`}
+                        />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="day-bar-empty" />
+                )}
+              </div>
+
+              <div className={`day-total ${!hasData ? 'zero' : ''}`}>
+                {hasData ? fmtHours(day.totalFitted) : '—'}
+              </div>
+              {hasData && <div className="day-total-real" title="Werkelijk geregistreerd">{formatHMS(day.totalMs)}</div>}
+
+              <div className="day-projects">
+                {hasRoundedData ? day.fitted
+                  .slice()
+                  .sort((a, b) => b.hoursFitted - a.hoursFitted)
+                  .map(item => {
+                    const proj = projects.find(p => p.id === item.id);
+                    const projIdx = projects.findIndex(p => p.id === item.id);
+                    const col = proj ? getProjectColor(proj, projIdx) : COLORS[0];
+                    return (
+                      <div key={item.id} className="day-project-item" title={`${item.name}: ${fmtHours(item.hoursFitted)} (werkelijk ${item.hoursRaw.toFixed(2).replace('.', ',')}u)`}>
+                        <span className="ddot" style={{ background: col.dot }} />
+                        <span className="pname">{item.name}</span>
+                        <span className="phours">{fmtHours(item.hoursFitted)}</span>
+                      </div>
+                    );
+                  })
+                  : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="week-total-row">
+        <span className="week-total-label">Weektotaal</span>
+        <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end'}}>
+          <span className="week-total-value">{fmtHours(weekTotalFitted)}</span>
+          <span className="week-total-real" title="Werkelijk geregistreerd">{formatHMS(weekTotalMs)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================
+// EXPORT MODAL — Excel via SheetJS
+// =========================================================
+function ExportModal({ projects, sessions, now, onClose }) {
+  const [period, setPeriod] = useState('week'); // 'today' | 'week' | 'lastweek'
+
+  // Bereken welke datums we exporteren
+  const { dates, weekNum, label, filename } = useMemo(() => {
+    if (period === 'today') {
+      const t = new Date(); t.setHours(0,0,0,0);
+      return {
+        dates: [t],
+        weekNum: null,
+        label: `${dayOfWeekNL(t)} ${t.getDate()} ${monthNL(t)} ${t.getFullYear()}`,
+        filename: `tijden-${padDate(t)}.xlsx`,
+      };
+    }
+    const offset = period === 'week' ? 0 : -1;
+    const monday = getMondayOf(offset);
+    const ds = Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(monday); d.setDate(monday.getDate() + i); return d;
+    });
+    const wk = isoWeekNumber(monday);
+    return {
+      dates: ds,
+      weekNum: wk,
+      label: `Week ${wk} — ${monday.getDate()} ${monthNL(monday)} t/m ${ds[4].getDate()} ${monthNL(ds[4])} ${ds[4].getFullYear()}`,
+      filename: `tijden-week${wk}-${padDate(monday)}.xlsx`,
+    };
+  }, [period]);
+
+  const dayBlocks = useMemo(() => buildDayBlocks(dates, projects, sessions, now), [dates, projects, sessions, now]);
+  const totalFittedAll = dayBlocks.reduce((s, d) => s + d.totalFitted, 0);
+
+  // Samenvattingslijst van actieve projecten deze periode (voor de preview in de modal)
+  const summaryProjects = useMemo(() => {
+    const map = new Map();
+    for (const day of dayBlocks) {
+      for (const item of day.fitted) {
+        map.set(item.id, (map.get(item.id) || 0) + item.hoursFitted);
+      }
+    }
+    return projects
+      .filter(p => map.has(p.id))
+      .map((p, _, arr) => ({ ...p, total: map.get(p.id), _fallbackIdx: projects.findIndex(x => x.id === p.id) }))
+      .sort((a, b) => b.total - a.total);
+  }, [dayBlocks, projects]);
+
+  const downloadExcel = () => {
+    const XLSX = window.XLSX;
+    if (!XLSX) { alert('SheetJS is nog niet geladen. Herlaad de pagina en probeer opnieuw.'); return; }
+
+    try {
+      const wb = XLSX.utils.book_new();
+
+      // ── BLAD 1: Uren per dag ─────────────────────────────────────
+      const activeProjects = projects.filter(p => summaryProjects.some(s => s.id === p.id));
+      const headerRow = ['Dag', 'Datum', ...activeProjects.map(p => p.name), 'Totaal'];
+      const dataRows = [];
+      const projectTotals = new Array(activeProjects.length).fill(0);
+      let grandTotal = 0;
+
+      for (const day of dayBlocks) {
+        const dayName = dayOfWeekNL(day.date);
+        const dateStr = `${day.date.getDate()} ${monthNL(day.date)}`;
+        const hours = activeProjects.map((p, i) => {
+          const item = day.fitted.find(x => x.id === p.id);
+          const h = item ? item.hoursFitted : 0;
+          projectTotals[i] += h;
+          return h > 0 ? h : '';
+        });
+        const total = day.totalFitted;
+        grandTotal += total;
+        dataRows.push([dayName, dateStr, ...hours, total > 0 ? total : '']);
+      }
+
+      const totaalRow = ['Totaal', '', ...projectTotals.map(h => h > 0 ? h : ''), grandTotal];
+      const wsUren = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows, totaalRow]);
+      wsUren['!cols'] = [{ wch: 13 }, { wch: 14 }, ...activeProjects.map(() => ({ wch: 16 })), { wch: 10 }];
+      XLSX.utils.book_append_sheet(wb, wsUren, 'Uren per dag');
+
+      // ── BLAD 2: Notities & taken ──────────────────────────────────
+      const aoaNotes = [['Dag', 'Datum', 'Project', 'Tijdvak', 'Duur', 'Taak', 'Afgerond']];
+      let hasNotes = false;
+      for (const day of dayBlocks) {
+        if (day.totalMs === 0) continue;
+        for (const proj of day.byProject) {
+          for (const s of proj.sessions) {
+            const todos = s.todos || [];
+            const sd = new Date(s.clippedStart);
+            const ed = new Date(s.clippedEnd);
+            const dur = s.clippedEnd - s.clippedStart;
+            const tijdvak = `${formatTimeShort(sd)}–${formatTimeShort(ed)}`;
+            const durStr = formatHMS(dur);
+            if (todos.length === 0) {
+              aoaNotes.push([dayOfWeekNL(day.date), `${day.date.getDate()} ${monthNL(day.date)}`, proj.name, tijdvak, durStr, '', '']);
+              hasNotes = true;
+            } else {
+              for (const todo of todos) {
+                aoaNotes.push([dayOfWeekNL(day.date), `${day.date.getDate()} ${monthNL(day.date)}`, proj.name, tijdvak, durStr, todo.text, todo.done ? 'Ja' : 'Nee']);
+                hasNotes = true;
+              }
+            }
+          }
+        }
+      }
+      if (hasNotes) {
+        const wsNotes = XLSX.utils.aoa_to_sheet(aoaNotes);
+        wsNotes['!cols'] = [{ wch: 13 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 40 }, { wch: 10 }];
+        XLSX.utils.book_append_sheet(wb, wsNotes, 'Notities & taken');
+      }
+
+      // Blob-download — werkt ook bij file:// en in Chrome/Edge PiP
+      const wbArray = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (err) {
+      alert('Export mislukt: ' + err.message);
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-dialog">
+        <div className="modal-header">
+          <h3 className="modal-title">Exporteer</h3>
+          <button className="icon-btn" onClick={onClose}><Close size={16}/></button>
+        </div>
+        <p className="modal-subtitle">{label}</p>
+
+        <div className="toggle-group" style={{marginBottom: 20}}>
+          <button className={`toggle-btn ${period === 'today'    ? 'active' : ''}`} onClick={() => setPeriod('today')}>Vandaag</button>
+          <button className={`toggle-btn ${period === 'week'     ? 'active' : ''}`} onClick={() => setPeriod('week')}>Deze week</button>
+          <button className={`toggle-btn ${period === 'lastweek' ? 'active' : ''}`} onClick={() => setPeriod('lastweek')}>Vorige week</button>
+        </div>
+
+        {/* Samenvatting */}
+        <div className="export-summary">
+          {summaryProjects.length === 0 ? (
+            <div className="export-summary-empty">Geen geregistreerde tijd voor deze periode.</div>
+          ) : (
+            <>
+              {summaryProjects.map(p => {
+                const col = getProjectColor(p, p._fallbackIdx ?? 0);
+                return (
+                  <div key={p.id} className="export-summary-row">
+                    <span className="proj">
+                      <span style={{width:7,height:7,borderRadius:'50%',background:col.dot,flexShrink:0,display:'inline-block'}}/>
+                      {p.name}
+                    </span>
+                    <span className="hrs">{fmtHours(p.total)}</span>
+                  </div>
+                );
+              })}
+              <div className="export-summary-total">
+                <span className="lbl">Totaal</span>
+                <span className="val">{fmtHours(totalFittedAll)}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        <p style={{fontSize:'0.75rem',color:'var(--text-muted)',margin:'0 0 20px'}}>
+          Excel-bestand met twee tabbladen: <em>Uren per dag</em> en <em>Notities &amp; taken</em>.
+        </p>
+
+        <div className="modal-actions">
+          <button className="btn btn-secondary" onClick={onClose}>Annuleer</button>
+          <button className="btn btn-primary" onClick={downloadExcel} disabled={summaryProjects.length === 0}>
+            Download .xlsx
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================
+// PIP — uitgeklapt
+// =========================================================
+function PipExpanded({ activeSession, activeProject, activeColor, activeMs, projects, todayPerProject, totalTodayMs, onSwitch, onStop, onCollapse, onClose, onUpdateTodos }) {
+  const c = activeColor || { dot: 'var(--text-disabled)', soft: 'transparent', ring: 'var(--border)' };
+  return (
+    <div style={{background:C.bg,color:C.textPrimary,minHeight:'100vh',padding:14,fontFamily:'"DM Sans",system-ui,sans-serif',boxSizing:'border-box'}}>
+      <div style={{background: activeProject ? c.soft : C.surface, border:`1px solid ${activeProject ? c.ring : 'var(--border)'}`, borderRadius:12, padding:'12px 14px', marginBottom:10}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+          <span style={{width:8,height:8,borderRadius:'50%',background:c.dot,boxShadow:activeProject?`0 0 8px ${c.ring}`:'none',flexShrink:0}}/>
+          <span style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:activeProject?C.textSecondary:C.textMuted,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+            {activeProject ? activeProject.name : 'Geen actieve timer'}
+          </span>
+          <button onClick={onCollapse} style={{background:'transparent',border:'none',color:C.textTertiary,cursor:'pointer',padding:4,borderRadius:4,display:'flex',alignItems:'center'}} title="Klap in"><Min size={13}/></button>
+          {activeProject && <button onClick={onStop} style={{background:'transparent',border:'none',color:C.danger,cursor:'pointer',padding:4,borderRadius:4,display:'flex',alignItems:'center'}} title="Stop"><Square size={11} fill="currentColor"/></button>}
+        </div>
+        <div style={{fontFamily:'"Fraunces",serif',fontSize:'2.25rem',fontWeight:400,letterSpacing:'-0.02em',lineHeight:1,color:activeProject?C.textPrimary:C.textDisabled,fontVariantNumeric:'tabular-nums'}}>
+          {formatTimer(activeMs)}
+        </div>
+      </div>
+      {activeSession && (
+        <PipTodoList
+          todos={activeSession.todos || []}
+          onChange={(todos) => onUpdateTodos(activeSession.id, todos)}
+        />
+      )}
+      <div style={{display:'flex',flexDirection:'column',gap:2}}>
+        {projects.map((p, i) => {
+          const col = getProjectColor(p, i);
+          const ms = todayPerProject.get(p.id) || 0;
+          const isActive = activeProject && activeProject.id === p.id;
+          return (
+            <button key={p.id} onClick={() => onSwitch(p.id)}
+              style={{display:'flex',alignItems:'center',gap:8,padding:'7px 10px',borderRadius:8,
+                background: isActive ? col.soft : 'transparent',
+                border: isActive ? `1px solid ${col.ring}` : '1px solid transparent',
+                color: isActive ? C.textPrimary : C.textSecondary,
+                fontFamily:'inherit',fontSize:13,cursor:'pointer',textAlign:'left',width:'100%',transition:'background 0.15s'}}>
+              <span style={{width:6,height:6,borderRadius:'50%',background:col.dot,flexShrink:0}}/>
+              <span style={{flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</span>
+              <span style={{fontSize:11,color:ms > 0 ? C.textTertiary : C.textDisabled,fontVariantNumeric:'tabular-nums'}}>
+                {ms > 0 ? formatHM(ms) : '—'}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${C.borderLight}`,display:'flex',justifyContent:'space-between',fontSize:11,color:C.textTertiary}}>
+        <span style={{textTransform:'uppercase',letterSpacing:'0.1em'}}>Vandaag</span>
+        <span style={{fontFamily:'"Fraunces",serif',color:C.textPrimary,fontVariantNumeric:'tabular-nums'}}>
+          {formatHM(totalTodayMs)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================
+// PIP — ingeklapt (alleen pijl + dot)
+// =========================================================
+function PipCollapsed({ activeColor, onExpand }) {
+  return (
+    <button className="pip-collapsed" onClick={onExpand} title="Klap uit">
+      {activeColor && <span className="pip-collapsed-dot" style={{ background: activeColor.dot, boxShadow: `0 0 6px ${activeColor.ring}`, animation: 'pulse 2s ease-in-out infinite' }} />}
+      <ChevL size={20}/>
+    </button>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
