@@ -65,6 +65,7 @@
   .icon-btn.danger:hover { background: var(--danger-soft); color: var(--danger); }
 
   .section { margin-top: 40px; }
+  .section.section-wide { width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; padding: 0 32px; }
   .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; }
   .project-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; transition: background 0.15s; border: 1px solid transparent; }
   .project-row .row-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.15s; }
@@ -569,12 +570,15 @@ function App() {
     let next = current;
     if (active) next = next.map(s => s.id === active.id ? { ...s, endTime: t } : s);
     if (projectId) {
-      // Haal openstaande todos op uit de meest recente sessie van dit project
+      // Haal openstaande todos op uit de meest recente sessie van dit project DIE TAKEN HEEFT.
+      // Lege tussensessies worden overgeslagen, zodat openstaande taken niet verloren gaan
+      // als de gebruiker een sessie startte zonder taken.
       const prevSessions = next
         .filter(s => s.projectId === projectId && s.endTime != null)
         .sort((a, b) => b.endTime - a.endTime);
-      const carryOver = prevSessions.length > 0
-        ? (prevSessions[0].todos || []).filter(t => !t.done).map(t => ({ ...t, carriedOver: true }))
+      const sourceSession = prevSessions.find(s => (s.todos || []).length > 0);
+      const carryOver = sourceSession
+        ? sourceSession.todos.filter(t => !t.done).map(t => ({ ...t, carriedOver: true }))
         : [];
       next = [...next, { id: uuid(), projectId, startTime: t, endTime: null, todos: carryOver }];
     }
@@ -737,7 +741,7 @@ function App() {
       </section>
 
       {/* Week — samengevoegd */}
-      <section className="section">
+      <section className="section section-wide">
         <div className="section-header">
           <h2 className="label" style={{margin:0}}>Werkweek</h2>
           <button className="export-btn" onClick={() => setExportOpen(true)}>Exporteer</button>
