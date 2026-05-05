@@ -1269,27 +1269,32 @@ function ExportModal({ projects, sessions, now, onClose }) {
     doc.write('<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Tijden — ' + escapeHTML(label) + '</title></head><body></body></html>');
     doc.close();
 
-    // CSS
+    // CSS — volledige breedte, met taken-lijst onder uren per cel
     const style = doc.createElement('style');
     style.textContent = [
       '*{box-sizing:border-box;margin:0;padding:0}',
-      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:#f8f8f6;color:#1c1917;padding:40px 32px;max-width:900px;margin:0 auto;line-height:1.5}',
+      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:#f8f8f6;color:#1c1917;padding:32px;line-height:1.5}',
+      '.header{margin-bottom:28px;max-width:1400px}',
       'h1{font-size:1.75rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:4px}',
-      '.meta{font-size:0.8rem;color:#78716c;margin-bottom:36px}',
-      'h2{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:#78716c;margin:32px 0 12px;font-weight:600}',
-      'table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e1ddd5;font-size:0.875rem}',
-      'th{background:#f0efea;font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:#78716c;padding:10px 14px;text-align:left;border-bottom:1px solid #e1ddd5}',
-      'td{padding:10px 14px;border-bottom:1px solid #f0efea;color:#44403c}',
+      '.meta{font-size:0.8rem;color:#78716c}',
+      'table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e1ddd5;font-size:0.875rem;table-layout:fixed}',
+      'th{background:#f0efea;font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:#78716c;padding:10px 14px;text-align:left;border-bottom:1px solid #e1ddd5;border-right:1px solid #e1ddd5;vertical-align:top}',
+      'th:last-child{border-right:none}',
+      'td{padding:12px 14px;border-bottom:1px solid #f0efea;border-right:1px solid #f0efea;color:#44403c;vertical-align:top;word-break:break-word}',
+      'td:last-child{border-right:none}',
       'tr:last-child td{border-bottom:none}',
-      '.day-cell{font-weight:500;color:#1c1917;min-width:140px}',
-      '.total-cell{font-weight:600;color:#b45309}',
+      '.day-cell{font-weight:500;color:#1c1917;width:160px}',
+      '.hours{font-weight:600;color:#1c1917;font-variant-numeric:tabular-nums;font-size:0.95rem;display:block;margin-bottom:4px}',
+      '.tasks{list-style:none;padding:0;margin:0}',
+      '.tasks li{font-size:0.72rem;color:#78716c;line-height:1.45;padding-left:10px;position:relative;margin-bottom:2px}',
+      '.tasks li::before{content:"";position:absolute;left:0;top:7px;width:4px;height:4px;border-radius:50%;background:#a8a29e}',
+      '.empty-cell{color:#c9c4ba;font-size:0.85rem}',
+      '.total-cell{font-weight:700;color:#b45309;font-variant-numeric:tabular-nums}',
       '.totaal-row td{background:#fafaf9;font-weight:600;border-top:2px solid #e1ddd5;color:#1c1917}',
       '.totaal-row .total-cell{color:#b45309;font-size:1.05rem}',
-      '.mono{font-variant-numeric:tabular-nums;color:#78716c}',
-      '.empty-msg{color:#a8a29e;text-align:center;padding:20px}',
-      '.print-btn{position:fixed;top:16px;right:16px;padding:8px 16px;border-radius:6px;border:1px solid #e1ddd5;background:#fff;cursor:pointer;font-size:0.8rem;color:#44403c;font-family:inherit}',
+      '.print-btn{position:fixed;top:16px;right:16px;padding:8px 16px;border-radius:6px;border:1px solid #e1ddd5;background:#fff;cursor:pointer;font-size:0.8rem;color:#44403c;font-family:inherit;z-index:10}',
       '.print-btn:hover{background:#f0efea}',
-      '@media print{body{padding:20px}h2{margin-top:20px}.print-btn{display:none}}'
+      '@media print{body{padding:16px}.print-btn{display:none}td,th{padding:8px 10px}}',
     ].join('\n');
     doc.head.appendChild(style);
 
@@ -1302,61 +1307,104 @@ function ExportModal({ projects, sessions, now, onClose }) {
     printBtn.onclick = () => win.print();
     body.appendChild(printBtn);
 
-    // Titel
+    // Header
+    const header = doc.createElement('div');
+    header.className = 'header';
     const h1 = doc.createElement('h1');
     h1.textContent = 'Tijdregistratie';
-    body.appendChild(h1);
-
+    header.appendChild(h1);
     const meta = doc.createElement('p');
     meta.className = 'meta';
     meta.textContent = label + ' · gegenereerd op ' + new Date().toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    body.appendChild(meta);
+    header.appendChild(meta);
+    body.appendChild(header);
 
-    // ── TABEL 1: Uren per dag ──
+    // Verzamel actieve projecten
     const activeProjIds = new Set();
     dayBlocks.forEach(d => d.fitted.forEach(x => activeProjIds.add(x.id)));
     const activeProjects = projects.filter(p => activeProjIds.has(p.id));
 
-    const h2a = doc.createElement('h2');
-    h2a.textContent = 'Uren per dag';
-    body.appendChild(h2a);
+    // ── DE TABEL ──
+    const table = doc.createElement('table');
 
-    const table1 = doc.createElement('table');
-    const thead1 = doc.createElement('thead');
+    // Header: Dag | proj1 | proj2 | ... | Totaal
+    const thead = doc.createElement('thead');
     const headRow = doc.createElement('tr');
-    const addTh = (txt) => { const th = doc.createElement('th'); th.textContent = txt; headRow.appendChild(th); };
+    const addTh = (txt, cls) => {
+      const th = doc.createElement('th');
+      th.textContent = txt;
+      if (cls) th.className = cls;
+      headRow.appendChild(th);
+    };
     addTh('Dag');
     activeProjects.forEach(p => addTh(p.name));
     addTh('Totaal');
-    thead1.appendChild(headRow);
-    table1.appendChild(thead1);
+    thead.appendChild(headRow);
+    table.appendChild(thead);
 
-    const tbody1 = doc.createElement('tbody');
+    const tbody = doc.createElement('tbody');
     const projectTotals = {};
     activeProjects.forEach(p => { projectTotals[p.id] = 0; });
 
+    // Helper: alle afgeronde taken voor één project op één dag
+    const tasksFor = (day, projectId) => {
+      const projData = day.byProject.find(bp => bp.id === projectId);
+      if (!projData) return [];
+      const out = [];
+      projData.sessions.forEach(s => {
+        (s.todos || []).filter(t => t.done).forEach(t => out.push(t.text));
+      });
+      return out;
+    };
+
     dayBlocks.forEach(day => {
       const tr = doc.createElement('tr');
+
+      // Dag-cel
       const dayTd = doc.createElement('td');
       dayTd.className = 'day-cell';
       dayTd.textContent = dayOfWeekNL(day.date) + ' ' + day.date.getDate() + ' ' + monthNL(day.date);
       tr.appendChild(dayTd);
 
+      // Per project: uren bovenin, taken eronder
       activeProjects.forEach(p => {
         const td = doc.createElement('td');
         const item = day.fitted.find(x => x.id === p.id);
         const h = item ? item.hoursFitted : 0;
         projectTotals[p.id] += h;
-        td.textContent = h > 0 ? fmtHours(h) : '';
+
+        if (h > 0) {
+          const hrSpan = doc.createElement('span');
+          hrSpan.className = 'hours';
+          hrSpan.textContent = fmtHours(h);
+          td.appendChild(hrSpan);
+
+          const tasks = tasksFor(day, p.id);
+          if (tasks.length > 0) {
+            const ul = doc.createElement('ul');
+            ul.className = 'tasks';
+            tasks.forEach(t => {
+              const li = doc.createElement('li');
+              li.textContent = t;
+              ul.appendChild(li);
+            });
+            td.appendChild(ul);
+          }
+        } else {
+          td.className = 'empty-cell';
+          td.textContent = '—';
+        }
         tr.appendChild(td);
       });
 
+      // Totaal-cel
       const totalTd = doc.createElement('td');
       totalTd.className = 'total-cell';
-      totalTd.textContent = day.totalFitted > 0 ? fmtHours(day.totalFitted) : '';
+      totalTd.textContent = day.totalFitted > 0 ? fmtHours(day.totalFitted) : '—';
+      if (day.totalFitted === 0) totalTd.className = 'empty-cell';
       tr.appendChild(totalTd);
 
-      tbody1.appendChild(tr);
+      tbody.appendChild(tr);
     });
 
     // Totaalregel
@@ -1374,56 +1422,10 @@ function ExportModal({ projects, sessions, now, onClose }) {
     grandTotalTd.className = 'total-cell';
     grandTotalTd.textContent = fmtHours(totalFittedAll);
     totaalTr.appendChild(grandTotalTd);
-    tbody1.appendChild(totaalTr);
-    table1.appendChild(tbody1);
-    body.appendChild(table1);
+    tbody.appendChild(totaalTr);
 
-    // ── TABEL 2: Afgeronde taken ──
-    const h2b = doc.createElement('h2');
-    h2b.textContent = 'Afgeronde taken';
-    body.appendChild(h2b);
-
-    const table2 = doc.createElement('table');
-    const thead2 = doc.createElement('thead');
-    const hr2 = doc.createElement('tr');
-    ['Dag', 'Project', 'Tijdvak', 'Taak'].forEach(t => {
-      const th = doc.createElement('th'); th.textContent = t; hr2.appendChild(th);
-    });
-    thead2.appendChild(hr2);
-    table2.appendChild(thead2);
-
-    const tbody2 = doc.createElement('tbody');
-    let taakCount = 0;
-    dayBlocks.forEach(day => {
-      day.byProject.forEach(proj => {
-        proj.sessions.forEach(s => {
-          const done = (s.todos || []).filter(t => t.done);
-          if (!done.length) return;
-          const sd = new Date(s.clippedStart), ed = new Date(s.clippedEnd);
-          const tijdvak = formatTimeShort(sd) + '–' + formatTimeShort(ed);
-          done.forEach(todo => {
-            const tr = doc.createElement('tr');
-            const td1 = doc.createElement('td'); td1.textContent = dayOfWeekNL(day.date) + ' ' + day.date.getDate() + ' ' + monthNL(day.date); tr.appendChild(td1);
-            const td2 = doc.createElement('td'); td2.textContent = proj.name; tr.appendChild(td2);
-            const td3 = doc.createElement('td'); td3.className = 'mono'; td3.textContent = tijdvak; tr.appendChild(td3);
-            const td4 = doc.createElement('td'); td4.textContent = todo.text; tr.appendChild(td4);
-            tbody2.appendChild(tr);
-            taakCount++;
-          });
-        });
-      });
-    });
-    if (taakCount === 0) {
-      const tr = doc.createElement('tr');
-      const td = doc.createElement('td');
-      td.colSpan = 4;
-      td.className = 'empty-msg';
-      td.textContent = 'Geen afgeronde taken in deze periode.';
-      tr.appendChild(td);
-      tbody2.appendChild(tr);
-    }
-    table2.appendChild(tbody2);
-    body.appendChild(table2);
+    table.appendChild(tbody);
+    body.appendChild(table);
 
     onClose();
   };
