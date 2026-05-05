@@ -9,7 +9,6 @@
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
     --bg: #f8f8f6;
@@ -133,6 +132,26 @@
   .week-total-value { font-family: "Fraunces", serif; font-size: 1.25rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
   .week-total-real { font-size: 0.72rem; color: var(--text-muted); font-variant-numeric: tabular-nums; margin-top: 2px; letter-spacing: 0.02em; }
 
+  /* Uitklapbaar dagdetail */
+  .day-expand-btn { width: 100%; background: transparent; border: none; cursor: pointer; padding: 4px 0 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: color 0.15s; }
+  .day-expand-btn:hover { color: var(--text-tertiary); }
+  .day-detail { grid-column: 1 / -1; background: var(--surface-sunken); border-radius: 10px; border: 1px solid var(--border-light); padding: 14px 16px; margin-top: 4px; animation: fadeIn 0.15s ease-out; }
+  .day-detail-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-tertiary); margin-bottom: 12px; }
+  .day-detail-proj { margin-bottom: 12px; }
+  .day-detail-proj-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .day-detail-proj-name { font-size: 0.875rem; font-weight: 500; color: var(--text-primary); flex: 1; }
+  .day-detail-proj-time { font-family: "Fraunces", serif; font-size: 0.875rem; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+  .day-detail-proj-blocks { font-size: 0.72rem; color: var(--text-muted); margin-left: auto; }
+  .day-detail-session { display: flex; align-items: baseline; gap: 8px; padding: 3px 0 3px 18px; border-left: 2px solid var(--border-light); margin-left: 6px; margin-bottom: 2px; }
+  .day-detail-session-time { font-size: 0.72rem; color: var(--text-tertiary); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+  .day-detail-session-dur { font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
+  .day-detail-todos { display: flex; flex-direction: column; gap: 2px; padding-left: 18px; margin-top: 2px; }
+  .day-detail-todo { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-secondary); }
+  .day-detail-todo-check { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--border-strong); appearance: none; -webkit-appearance: none; flex-shrink: 0; background: var(--surface); position: relative; cursor: default; }
+  .day-detail-todo-check.done { background: var(--accent); border-color: var(--accent); }
+  .day-detail-todo-check.done::after { content: ''; position: absolute; left: 2px; top: 0; width: 4px; height: 6px; border: 1.5px solid white; border-top: none; border-left: none; transform: rotate(40deg); }
+  .day-detail-todo-text.done { color: var(--text-muted); text-decoration: line-through; }
+
   @media (max-width: 560px) {
     .week-grid { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 8px; }
     .day-col { min-width: 110px; flex-shrink: 0; }
@@ -187,6 +206,7 @@
   .todo-add:focus-within { border-color: var(--text-tertiary); border-style: solid; }
   .todo-add input { flex: 1; background: transparent; border: none; outline: none; font-size: 0.875rem; color: var(--text-primary); font-family: inherit; }
   .todo-add input::placeholder { color: var(--text-muted); }
+  .todo-carried { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); background: var(--surface-sunken); border-radius: 3px; padding: 1px 5px; flex-shrink: 0; margin-left: 2px; }
   .todo-progress { font-size: 0.7rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
   /* PiP todo (compact) */
@@ -313,7 +333,9 @@ const formatHMS = (ms) => {
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
 };
 const msToHours = (ms) => ms / 3600000;
-const roundToHalf = (h) => Math.round(h * 2) / 2;
+const ceilToHalf  = (h) => Math.ceil(h * 2) / 2;          // naar boven op 0,5u (30 min)
+const sixMinBlocks = (ms) => Math.ceil(ms / 360000);       // aantal 6-min-eenheden (naar boven)
+const fmtBlocks    = (ms) => { const b = sixMinBlocks(ms); return `${b}×6 min`; };
 const fmtHours = (h) => h.toFixed(1).replace('.', ',') + 'u';
 const formatTimeShort = (date) => `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
 const formatDateNL = (d) => {
@@ -338,14 +360,14 @@ const isoWeekNumber = (d) => {
   return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
 };
 
-// Per-dag verdeling — afronden op halve uren, geen forceren naar 8u
+// Per-dag verdeling — afronden op 6 minuten (0,1 uur), geen forceren naar 8u
 const computeDistribution = (perProjectMs, projects) => {
   const items = projects
     .map(p => ({ id: p.id, name: p.name, hoursRaw: msToHours(perProjectMs.get(p.id) || 0) }))
     .filter(x => x.hoursRaw > 0);
   if (items.length === 0) return { fitted: [], totalFitted: 0 };
-  const rounded = items.map(x => ({ ...x, hoursFitted: roundToHalf(x.hoursRaw) }));
-  // Items die naar 0 afronden (sessies < 15 min) verbergen we voor de leesbaarheid
+  const rounded = items.map(x => ({ ...x, hoursFitted: ceilToHalf(x.hoursRaw) }));
+  // Items die naar 0,0 afronden (sessies < 3 min) verbergen we voor de leesbaarheid
   const visible = rounded.filter(x => x.hoursFitted > 0);
   const totalFitted = visible.reduce((a, x) => a + x.hoursFitted, 0);
   return { fitted: visible, totalFitted };
@@ -357,6 +379,7 @@ const computeDistribution = (perProjectMs, projects) => {
 const padDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const dayOfWeekNL = (d) => ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'][d.getDay()];
 const monthNL = (d) => ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'][d.getMonth()];
+const escapeHTML = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 // Sessies die overlappen met [start, end) — gesorteerd op starttijd, geknipt op grenzen
 const sessionsInRange = (sessions, start, end, now) => {
@@ -406,7 +429,7 @@ const buildDayBlocks = (dates, projects, sessions, now) => {
         sessions: byProjectMap.get(x.id) || [],
       }))
       .sort((a, b) => b.hoursFitted - a.hoursFitted);
-    return { date, totalMs, totalFitted: dist.totalFitted, byProject };
+    return { date, totalMs, totalFitted: dist.totalFitted, fitted: dist.fitted, byProject };
   });
 };
 
@@ -539,17 +562,24 @@ function App() {
     await db.saveProjects(nextProjects);
   };
   const switchTo = async (projectId) => {
-    // Lees actuele state via ref (niet via stale closure) zodat snelle klikken correct stapelen
     const current = sessionsRef.current;
     const active = current.find(s => !s.endTime) || null;
-    // No-op: klikken op het al actieve project doet niets (gebruik Stop om te stoppen)
     if (projectId && active && active.projectId === projectId) return;
-    const t = Date.now(); // één enkele timestamp voor end + start zodat er geen gat ontstaat
+    const t = Date.now();
     let next = current;
     if (active) next = next.map(s => s.id === active.id ? { ...s, endTime: t } : s);
-    if (projectId) next = [...next, { id: uuid(), projectId, startTime: t, endTime: null, todos: [] }];
+    if (projectId) {
+      // Haal openstaande todos op uit de meest recente sessie van dit project
+      const prevSessions = next
+        .filter(s => s.projectId === projectId && s.endTime != null)
+        .sort((a, b) => b.endTime - a.endTime);
+      const carryOver = prevSessions.length > 0
+        ? (prevSessions[0].todos || []).filter(t => !t.done).map(t => ({ ...t, carriedOver: true }))
+        : [];
+      next = [...next, { id: uuid(), projectId, startTime: t, endTime: null, todos: carryOver }];
+    }
     setSessions(next);
-    sessionsRef.current = next; // direct bijwerken zodat opvolgende calls de nieuwe state zien
+    sessionsRef.current = next;
     await db.saveSessions(next);
   };
   const stopTimer = () => switchTo(null);
@@ -777,13 +807,14 @@ function TodoList({ todos, onChange }) {
   const toggle = (id) => onChange(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
   const remove = (id) => onChange(todos.filter(t => t.id !== id));
 
+  const carried = todos.filter(t => t.carriedOver && !t.done);
   const doneCount = todos.filter(t => t.done).length;
   const total = todos.length;
 
   return (
     <div className="todo-area">
       <div className="todo-label">
-        <span>Taken</span>
+        <span>Taken {carried.length > 0 && <span style={{color:'var(--accent)',fontWeight:500}}>{carried.length} overgedragen</span>}</span>
         {total > 0 && <span className="todo-progress">{doneCount}/{total}</span>}
       </div>
       {todos.length > 0 && (
@@ -797,6 +828,7 @@ function TodoList({ todos, onChange }) {
                 onChange={() => toggle(todo.id)}
               />
               <span className={`todo-text ${todo.done ? 'done' : ''}`}>{todo.text}</span>
+              {todo.carriedOver && !todo.done && <span className="todo-carried">vorig</span>}
               <button className="todo-delete" onClick={() => remove(todo.id)} title="Verwijder">
                 <XSmall size={12}/>
               </button>
@@ -840,6 +872,7 @@ function PipTodoList({ todos, onChange }) {
         <div key={todo.id} className="pip-todo-item">
           <input type="checkbox" className="pip-todo-check" checked={todo.done} onChange={() => toggle(todo.id)}/>
           <span className={`pip-todo-text ${todo.done ? 'done' : ''}`}>{todo.text}</span>
+          {todo.carriedOver && !todo.done && <span style={{fontSize:9,color:'var(--text-muted)',flexShrink:0}}>↩</span>}
           <button className="pip-todo-del" onClick={() => remove(todo.id)}><XSmall size={10}/></button>
         </div>
       ))}
@@ -1005,50 +1038,32 @@ function CheckInDialog({ time, projectId, projects, mode, onContinue, onSwitchMo
 }
 
 // =========================================================
-// WEEK COLUMNS — verticale dag-kolommen met balkje + project-uren
+// WEEK COLUMNS — verticale dag-kolommen met balkje + uitklapbaar detail
 // =========================================================
 function WeekColumns({ projects, sessions, now }) {
-  const [offset, setOffset] = useState(0);
+  const [offset, setOffset]       = useState(0);
+  const [expandedIdx, setExpanded] = useState(null); // index van uitgekapte dag (0-4)
+
   const todayKey = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }, [now]);
 
   const weekDates = useMemo(() => {
     const monday = getMondayOf(offset);
     return Array.from({ length: 5 }, (_, i) => {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      return d;
+      const d = new Date(monday); d.setDate(monday.getDate() + i); return d;
     });
   }, [offset]);
 
-  const days = useMemo(() => {
-    return weekDates.map(date => {
-      const start = date.getTime();
-      const end = start + 86400000;
-      const perProject = new Map();
-      projects.forEach(p => perProject.set(p.id, 0));
-      sessions.forEach(s => {
-        const sStart = s.startTime;
-        const sEnd = s.endTime ?? now;
-        if (sEnd <= start || sStart >= end) return;
-        const overlap = Math.min(sEnd, end) - Math.max(sStart, start);
-        if (overlap > 0) perProject.set(s.projectId, (perProject.get(s.projectId) || 0) + overlap);
-      });
-      let totalMs = 0; perProject.forEach(v => totalMs += v);
-      // Werkelijke project-lijst voor deze dag (alleen projecten met tijd)
-      const realList = projects
-        .map(p => ({ id: p.id, name: p.name, ms: perProject.get(p.id) || 0 }))
-        .filter(x => x.ms > 0);
-      const dist = computeDistribution(perProject, projects);
-      return { date, totalMs, realList, ...dist };
-    });
-  }, [weekDates, projects, sessions, now]);
+  // Gebruik buildDayBlocks zodat session/todo-data beschikbaar is
+  const days = useMemo(() => buildDayBlocks(weekDates, projects, sessions, now), [weekDates, projects, sessions, now]);
 
-  const weekTotalFitted = days.reduce((sum, d) => sum + d.totalFitted, 0);
-  const weekTotalMs = days.reduce((sum, d) => sum + d.totalMs, 0);
-  const dayNamesShort = ['Ma', 'Di', 'Wo', 'Do', 'Vr'];
-  const weekNum = isoWeekNumber(weekDates[0]);
-  const labelDates = `${weekDates[0].getDate()} ${monthShort(weekDates[0].getMonth())} – ${weekDates[4].getDate()} ${monthShort(weekDates[4].getMonth())}`;
-  const weekTag = offset === 0 ? ' · deze week' : offset === -1 ? ' · vorige week' : offset === 1 ? ' · volgende week' : '';
+  const weekTotalFitted = days.reduce((s, d) => s + d.totalFitted, 0);
+  const weekTotalMs     = days.reduce((s, d) => s + d.totalMs, 0);
+  const dayNamesShort   = ['Ma', 'Di', 'Wo', 'Do', 'Vr'];
+  const weekNum         = isoWeekNumber(weekDates[0]);
+  const labelDates      = `${weekDates[0].getDate()} ${monthShort(weekDates[0].getMonth())} – ${weekDates[4].getDate()} ${monthShort(weekDates[4].getMonth())}`;
+  const weekTag         = offset === 0 ? ' · deze week' : offset === -1 ? ' · vorige week' : offset === 1 ? ' · volgende week' : '';
+
+  const toggleExpand = (idx) => setExpanded(prev => prev === idx ? null : idx);
 
   return (
     <div className="week-card">
@@ -1058,20 +1073,21 @@ function WeekColumns({ projects, sessions, now }) {
           <span className="week-label-dates">{labelDates}</span>
         </div>
         <div className="week-arrows">
-          <button className="week-arrow" onClick={() => setOffset(o => o - 1)} title="Vorige week"><ChevL size={14}/></button>
-          <button className="week-arrow week-arrow-now" onClick={() => setOffset(0)} disabled={offset === 0} title="Deze week">Nu</button>
-          <button className="week-arrow" onClick={() => setOffset(o => o + 1)} title="Volgende week"><ChevR size={14}/></button>
+          <button className="week-arrow" onClick={() => { setOffset(o => o - 1); setExpanded(null); }} title="Vorige week"><ChevL size={14}/></button>
+          <button className="week-arrow week-arrow-now" onClick={() => { setOffset(0); setExpanded(null); }} disabled={offset === 0} title="Deze week">Nu</button>
+          <button className="week-arrow" onClick={() => { setOffset(o => o + 1); setExpanded(null); }} title="Volgende week"><ChevR size={14}/></button>
         </div>
       </div>
 
       <div className="week-grid">
         {days.map((day, idx) => {
-          const isToday = day.date.getTime() === todayKey;
-          const hasData = day.totalMs > 0;
-          const hasRoundedData = day.fitted.length > 0;
-          // Schaal: 8u = volle 140px bar als baseline. Bij meer dan 8u groeit de schaal mee zodat alles past.
+          const isToday      = day.date.getTime() === todayKey;
+          const hasData      = day.totalMs > 0;
+          const hasRounded   = day.fitted.length > 0;
+          const isExpanded   = expandedIdx === idx;
           const wrapHeightPx = 140;
-          const dayScale = Math.max(8, day.totalFitted);
+          const dayScale     = Math.max(8, day.totalFitted);
+
           return (
             <div key={idx} className={`day-col ${isToday ? 'today' : ''}`}>
               <div className="day-header">
@@ -1081,7 +1097,7 @@ function WeekColumns({ projects, sessions, now }) {
 
               <div className="day-bar-wrap">
                 <span className="day-bar-guide" />
-                {hasRoundedData ? (
+                {hasRounded ? (
                   <div className="day-bar">
                     {day.fitted.map(item => {
                       const proj = projects.find(p => p.id === item.id);
@@ -1090,12 +1106,9 @@ function WeekColumns({ projects, sessions, now }) {
                       const segPx = (item.hoursFitted / dayScale) * wrapHeightPx;
                       if (segPx <= 0) return null;
                       return (
-                        <div
-                          key={item.id}
-                          className="day-bar-segment"
+                        <div key={item.id} className="day-bar-segment"
                           style={{ height: `${segPx}px`, background: col.dot }}
-                          title={`${item.name}: ${fmtHours(item.hoursFitted)}`}
-                        />
+                          title={`${item.name}: ${fmtHours(item.hoursFitted)}`} />
                       );
                     })}
                   </div>
@@ -1107,36 +1120,49 @@ function WeekColumns({ projects, sessions, now }) {
               <div className={`day-total ${!hasData ? 'zero' : ''}`}>
                 {hasData ? fmtHours(day.totalFitted) : '—'}
               </div>
-              {hasData && <div className="day-total-real" title="Werkelijk geregistreerd">{formatHMS(day.totalMs)}</div>}
+              {hasData && <div className="day-total-real" title="Werkelijk">{formatHMS(day.totalMs)}</div>}
 
               <div className="day-projects">
-                {hasRoundedData ? day.fitted
-                  .slice()
-                  .sort((a, b) => b.hoursFitted - a.hoursFitted)
+                {hasRounded ? day.fitted
+                  .slice().sort((a, b) => b.hoursFitted - a.hoursFitted)
                   .map(item => {
                     const proj = projects.find(p => p.id === item.id);
                     const projIdx = projects.findIndex(p => p.id === item.id);
                     const col = proj ? getProjectColor(proj, projIdx) : COLORS[0];
                     return (
-                      <div key={item.id} className="day-project-item" title={`${item.name}: ${fmtHours(item.hoursFitted)} (werkelijk ${item.hoursRaw.toFixed(2).replace('.', ',')}u)`}>
+                      <div key={item.id} className="day-project-item">
                         <span className="ddot" style={{ background: col.dot }} />
                         <span className="pname">{item.name}</span>
                         <span className="phours">{fmtHours(item.hoursFitted)}</span>
                       </div>
                     );
-                  })
-                  : null}
+                  }) : null}
               </div>
+
+              {hasData && (
+                <button className="day-expand-btn" onClick={() => toggleExpand(idx)} title={isExpanded ? 'Inklappen' : 'Uitklappen'}>
+                  {isExpanded ? <ChevL size={12} style={{transform:'rotate(90deg)'}}/> : <ChevR size={12} style={{transform:'rotate(90deg)'}}/>}
+                </button>
+              )}
             </div>
           );
         })}
+
+        {/* Uitklapbaar detailpaneel — volle breedte onder het grid */}
+        {expandedIdx !== null && days[expandedIdx] && days[expandedIdx].totalMs > 0 && (
+          <DayDetail
+            day={days[expandedIdx]}
+            projects={projects}
+            dayName={`${dayNamesShort[expandedIdx]} ${days[expandedIdx].date.getDate()} ${monthShort(days[expandedIdx].date.getMonth())}`}
+          />
+        )}
       </div>
 
       <div className="week-total-row">
         <span className="week-total-label">Weektotaal</span>
-        <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end'}}>
+        <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end'}}>
           <span className="week-total-value">{fmtHours(weekTotalFitted)}</span>
-          <span className="week-total-real" title="Werkelijk geregistreerd">{formatHMS(weekTotalMs)}</span>
+          <span className="week-total-real">{formatHMS(weekTotalMs)}</span>
         </div>
       </div>
     </div>
@@ -1144,183 +1170,307 @@ function WeekColumns({ projects, sessions, now }) {
 }
 
 // =========================================================
-// EXPORT MODAL — Excel via SheetJS
+// DAGDETAIL — uitklapbaar paneel met 6-minuten breakdown
+// =========================================================
+function DayDetail({ day, projects, dayName }) {
+  return (
+    <div className="day-detail">
+      <div className="day-detail-title">{dayName} — detail per 6 minuten</div>
+      {day.byProject.map(proj => {
+        const projObj = projects.find(p => p.id === proj.id);
+        const projIdx = projects.findIndex(p => p.id === proj.id);
+        const col = projObj ? getProjectColor(projObj, projIdx) : COLORS[0];
+
+        return (
+          <div key={proj.id} className="day-detail-proj">
+            <div className="day-detail-proj-header">
+              <span style={{width:8,height:8,borderRadius:'50%',background:col.dot,flexShrink:0,display:'inline-block'}}/>
+              <span className="day-detail-proj-name">{proj.name}</span>
+              <span className="day-detail-proj-blocks">{fmtBlocks(proj.ms)}</span>
+              <span className="day-detail-proj-time">{fmtHours(proj.hoursFitted)}</span>
+            </div>
+
+            {proj.sessions.map(s => {
+              const sd  = new Date(s.clippedStart);
+              const ed  = new Date(s.clippedEnd);
+              const dur = s.clippedEnd - s.clippedStart;
+              const todos = s.todos || [];
+              const hasTodos = todos.length > 0;
+
+              return (
+                <div key={s.id}>
+                  <div className="day-detail-session">
+                    <span className="day-detail-session-time">
+                      {formatTimeShort(sd)}–{formatTimeShort(ed)}
+                    </span>
+                    <span className="day-detail-session-dur">
+                      {fmtBlocks(dur)} ({formatHMS(dur)})
+                    </span>
+                  </div>
+                  {hasTodos && (
+                    <div className="day-detail-todos">
+                      {todos.map(todo => (
+                        <div key={todo.id} className="day-detail-todo">
+                          <span className={`day-detail-todo-check ${todo.done ? 'done' : ''}`}/>
+                          <span className={`day-detail-todo-text ${todo.done ? 'done' : ''}`}>{todo.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// =========================================================
+// EXPORT MODAL — opent rapport in nieuw tabblad
 // =========================================================
 function ExportModal({ projects, sessions, now, onClose }) {
-  const [period, setPeriod] = useState('week'); // 'today' | 'week' | 'lastweek'
+  const [period, setPeriod] = useState('week');
 
-  // Bereken welke datums we exporteren
-  const { dates, weekNum, label, filename } = useMemo(() => {
+  const { dates, label } = useMemo(() => {
     if (period === 'today') {
       const t = new Date(); t.setHours(0,0,0,0);
-      return {
-        dates: [t],
-        weekNum: null,
-        label: `${dayOfWeekNL(t)} ${t.getDate()} ${monthNL(t)} ${t.getFullYear()}`,
-        filename: `tijden-${padDate(t)}.xlsx`,
-      };
+      return { dates: [t], label: dayOfWeekNL(t) + ' ' + t.getDate() + ' ' + monthNL(t) + ' ' + t.getFullYear() };
     }
     const offset = period === 'week' ? 0 : -1;
     const monday = getMondayOf(offset);
-    const ds = Array.from({ length: 5 }, (_, i) => {
-      const d = new Date(monday); d.setDate(monday.getDate() + i); return d;
-    });
+    const ds = Array.from({ length: 5 }, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
     const wk = isoWeekNumber(monday);
-    return {
-      dates: ds,
-      weekNum: wk,
-      label: `Week ${wk} — ${monday.getDate()} ${monthNL(monday)} t/m ${ds[4].getDate()} ${monthNL(ds[4])} ${ds[4].getFullYear()}`,
-      filename: `tijden-week${wk}-${padDate(monday)}.xlsx`,
-    };
+    return { dates: ds, label: 'Week ' + wk + ' — ' + monday.getDate() + ' ' + monthNL(monday) + ' t/m ' + ds[4].getDate() + ' ' + monthNL(ds[4]) + ' ' + ds[4].getFullYear() };
   }, [period]);
 
   const dayBlocks = useMemo(() => buildDayBlocks(dates, projects, sessions, now), [dates, projects, sessions, now]);
   const totalFittedAll = dayBlocks.reduce((s, d) => s + d.totalFitted, 0);
 
-  // Samenvattingslijst van actieve projecten deze periode (voor de preview in de modal)
   const summaryProjects = useMemo(() => {
     const map = new Map();
-    for (const day of dayBlocks) {
-      for (const item of day.fitted) {
-        map.set(item.id, (map.get(item.id) || 0) + item.hoursFitted);
-      }
-    }
-    return projects
-      .filter(p => map.has(p.id))
-      .map((p, _, arr) => ({ ...p, total: map.get(p.id), _fallbackIdx: projects.findIndex(x => x.id === p.id) }))
+    dayBlocks.forEach(d => d.fitted.forEach(x => map.set(x.id, (map.get(x.id) || 0) + x.hoursFitted)));
+    return projects.filter(p => map.has(p.id))
+      .map(p => ({ ...p, total: map.get(p.id), _fi: projects.findIndex(x => x.id === p.id) }))
       .sort((a, b) => b.total - a.total);
   }, [dayBlocks, projects]);
 
-  const downloadExcel = () => {
-    const XLSX = window.XLSX;
-    if (!XLSX) { alert('SheetJS is nog niet geladen. Herlaad de pagina en probeer opnieuw.'); return; }
-
-    try {
-      const wb = XLSX.utils.book_new();
-
-      // ── BLAD 1: Uren per dag ─────────────────────────────────────
-      const activeProjects = projects.filter(p => summaryProjects.some(s => s.id === p.id));
-      const headerRow = ['Dag', 'Datum', ...activeProjects.map(p => p.name), 'Totaal'];
-      const dataRows = [];
-      const projectTotals = new Array(activeProjects.length).fill(0);
-      let grandTotal = 0;
-
-      for (const day of dayBlocks) {
-        const dayName = dayOfWeekNL(day.date);
-        const dateStr = `${day.date.getDate()} ${monthNL(day.date)}`;
-        const hours = activeProjects.map((p, i) => {
-          const item = day.fitted.find(x => x.id === p.id);
-          const h = item ? item.hoursFitted : 0;
-          projectTotals[i] += h;
-          return h > 0 ? h : '';
-        });
-        const total = day.totalFitted;
-        grandTotal += total;
-        dataRows.push([dayName, dateStr, ...hours, total > 0 ? total : '']);
-      }
-
-      const totaalRow = ['Totaal', '', ...projectTotals.map(h => h > 0 ? h : ''), grandTotal];
-      const wsUren = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows, totaalRow]);
-      wsUren['!cols'] = [{ wch: 13 }, { wch: 14 }, ...activeProjects.map(() => ({ wch: 16 })), { wch: 10 }];
-      XLSX.utils.book_append_sheet(wb, wsUren, 'Uren per dag');
-
-      // ── BLAD 2: Notities & taken ──────────────────────────────────
-      const aoaNotes = [['Dag', 'Datum', 'Project', 'Tijdvak', 'Duur', 'Taak', 'Afgerond']];
-      let hasNotes = false;
-      for (const day of dayBlocks) {
-        if (day.totalMs === 0) continue;
-        for (const proj of day.byProject) {
-          for (const s of proj.sessions) {
-            const todos = s.todos || [];
-            const sd = new Date(s.clippedStart);
-            const ed = new Date(s.clippedEnd);
-            const dur = s.clippedEnd - s.clippedStart;
-            const tijdvak = `${formatTimeShort(sd)}–${formatTimeShort(ed)}`;
-            const durStr = formatHMS(dur);
-            if (todos.length === 0) {
-              aoaNotes.push([dayOfWeekNL(day.date), `${day.date.getDate()} ${monthNL(day.date)}`, proj.name, tijdvak, durStr, '', '']);
-              hasNotes = true;
-            } else {
-              for (const todo of todos) {
-                aoaNotes.push([dayOfWeekNL(day.date), `${day.date.getDate()} ${monthNL(day.date)}`, proj.name, tijdvak, durStr, todo.text, todo.done ? 'Ja' : 'Nee']);
-                hasNotes = true;
-              }
-            }
-          }
-        }
-      }
-      if (hasNotes) {
-        const wsNotes = XLSX.utils.aoa_to_sheet(aoaNotes);
-        wsNotes['!cols'] = [{ wch: 13 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 40 }, { wch: 10 }];
-        XLSX.utils.book_append_sheet(wb, wsNotes, 'Notities & taken');
-      }
-
-      // Blob-download — werkt ook bij file:// en in Chrome/Edge PiP
-      const wbArray = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([wbArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    } catch (err) {
-      alert('Export mislukt: ' + err.message);
-      console.error(err);
+  const openReport = () => {
+    const win = window.open('', '_blank');
+    if (!win) {
+      alert('Pop-up geblokkeerd. Sta pop-ups toe voor deze pagina en probeer opnieuw.');
+      return;
     }
+
+    // Bouw de tabellen via DOM (geen complexe template literals)
+    const doc = win.document;
+    doc.open();
+    doc.write('<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Tijden — ' + escapeHTML(label) + '</title></head><body></body></html>');
+    doc.close();
+
+    // CSS
+    const style = doc.createElement('style');
+    style.textContent = [
+      '*{box-sizing:border-box;margin:0;padding:0}',
+      'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;background:#f8f8f6;color:#1c1917;padding:40px 32px;max-width:900px;margin:0 auto;line-height:1.5}',
+      'h1{font-size:1.75rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:4px}',
+      '.meta{font-size:0.8rem;color:#78716c;margin-bottom:36px}',
+      'h2{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:#78716c;margin:32px 0 12px;font-weight:600}',
+      'table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e1ddd5;font-size:0.875rem}',
+      'th{background:#f0efea;font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:#78716c;padding:10px 14px;text-align:left;border-bottom:1px solid #e1ddd5}',
+      'td{padding:10px 14px;border-bottom:1px solid #f0efea;color:#44403c}',
+      'tr:last-child td{border-bottom:none}',
+      '.day-cell{font-weight:500;color:#1c1917;min-width:140px}',
+      '.total-cell{font-weight:600;color:#b45309}',
+      '.totaal-row td{background:#fafaf9;font-weight:600;border-top:2px solid #e1ddd5;color:#1c1917}',
+      '.totaal-row .total-cell{color:#b45309;font-size:1.05rem}',
+      '.mono{font-variant-numeric:tabular-nums;color:#78716c}',
+      '.empty-msg{color:#a8a29e;text-align:center;padding:20px}',
+      '.print-btn{position:fixed;top:16px;right:16px;padding:8px 16px;border-radius:6px;border:1px solid #e1ddd5;background:#fff;cursor:pointer;font-size:0.8rem;color:#44403c;font-family:inherit}',
+      '.print-btn:hover{background:#f0efea}',
+      '@media print{body{padding:20px}h2{margin-top:20px}.print-btn{display:none}}'
+    ].join('\n');
+    doc.head.appendChild(style);
+
+    const body = doc.body;
+
+    // Print-knop
+    const printBtn = doc.createElement('button');
+    printBtn.className = 'print-btn';
+    printBtn.textContent = 'Afdrukken / opslaan als PDF';
+    printBtn.onclick = () => win.print();
+    body.appendChild(printBtn);
+
+    // Titel
+    const h1 = doc.createElement('h1');
+    h1.textContent = 'Tijdregistratie';
+    body.appendChild(h1);
+
+    const meta = doc.createElement('p');
+    meta.className = 'meta';
+    meta.textContent = label + ' · gegenereerd op ' + new Date().toLocaleDateString('nl-NL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    body.appendChild(meta);
+
+    // ── TABEL 1: Uren per dag ──
+    const activeProjIds = new Set();
+    dayBlocks.forEach(d => d.fitted.forEach(x => activeProjIds.add(x.id)));
+    const activeProjects = projects.filter(p => activeProjIds.has(p.id));
+
+    const h2a = doc.createElement('h2');
+    h2a.textContent = 'Uren per dag';
+    body.appendChild(h2a);
+
+    const table1 = doc.createElement('table');
+    const thead1 = doc.createElement('thead');
+    const headRow = doc.createElement('tr');
+    const addTh = (txt) => { const th = doc.createElement('th'); th.textContent = txt; headRow.appendChild(th); };
+    addTh('Dag');
+    activeProjects.forEach(p => addTh(p.name));
+    addTh('Totaal');
+    thead1.appendChild(headRow);
+    table1.appendChild(thead1);
+
+    const tbody1 = doc.createElement('tbody');
+    const projectTotals = {};
+    activeProjects.forEach(p => { projectTotals[p.id] = 0; });
+
+    dayBlocks.forEach(day => {
+      const tr = doc.createElement('tr');
+      const dayTd = doc.createElement('td');
+      dayTd.className = 'day-cell';
+      dayTd.textContent = dayOfWeekNL(day.date) + ' ' + day.date.getDate() + ' ' + monthNL(day.date);
+      tr.appendChild(dayTd);
+
+      activeProjects.forEach(p => {
+        const td = doc.createElement('td');
+        const item = day.fitted.find(x => x.id === p.id);
+        const h = item ? item.hoursFitted : 0;
+        projectTotals[p.id] += h;
+        td.textContent = h > 0 ? fmtHours(h) : '';
+        tr.appendChild(td);
+      });
+
+      const totalTd = doc.createElement('td');
+      totalTd.className = 'total-cell';
+      totalTd.textContent = day.totalFitted > 0 ? fmtHours(day.totalFitted) : '';
+      tr.appendChild(totalTd);
+
+      tbody1.appendChild(tr);
+    });
+
+    // Totaalregel
+    const totaalTr = doc.createElement('tr');
+    totaalTr.className = 'totaal-row';
+    const totaalLabel = doc.createElement('td');
+    totaalLabel.textContent = 'Totaal';
+    totaalTr.appendChild(totaalLabel);
+    activeProjects.forEach(p => {
+      const td = doc.createElement('td');
+      td.textContent = projectTotals[p.id] > 0 ? fmtHours(projectTotals[p.id]) : '';
+      totaalTr.appendChild(td);
+    });
+    const grandTotalTd = doc.createElement('td');
+    grandTotalTd.className = 'total-cell';
+    grandTotalTd.textContent = fmtHours(totalFittedAll);
+    totaalTr.appendChild(grandTotalTd);
+    tbody1.appendChild(totaalTr);
+    table1.appendChild(tbody1);
+    body.appendChild(table1);
+
+    // ── TABEL 2: Afgeronde taken ──
+    const h2b = doc.createElement('h2');
+    h2b.textContent = 'Afgeronde taken';
+    body.appendChild(h2b);
+
+    const table2 = doc.createElement('table');
+    const thead2 = doc.createElement('thead');
+    const hr2 = doc.createElement('tr');
+    ['Dag', 'Project', 'Tijdvak', 'Taak'].forEach(t => {
+      const th = doc.createElement('th'); th.textContent = t; hr2.appendChild(th);
+    });
+    thead2.appendChild(hr2);
+    table2.appendChild(thead2);
+
+    const tbody2 = doc.createElement('tbody');
+    let taakCount = 0;
+    dayBlocks.forEach(day => {
+      day.byProject.forEach(proj => {
+        proj.sessions.forEach(s => {
+          const done = (s.todos || []).filter(t => t.done);
+          if (!done.length) return;
+          const sd = new Date(s.clippedStart), ed = new Date(s.clippedEnd);
+          const tijdvak = formatTimeShort(sd) + '–' + formatTimeShort(ed);
+          done.forEach(todo => {
+            const tr = doc.createElement('tr');
+            const td1 = doc.createElement('td'); td1.textContent = dayOfWeekNL(day.date) + ' ' + day.date.getDate() + ' ' + monthNL(day.date); tr.appendChild(td1);
+            const td2 = doc.createElement('td'); td2.textContent = proj.name; tr.appendChild(td2);
+            const td3 = doc.createElement('td'); td3.className = 'mono'; td3.textContent = tijdvak; tr.appendChild(td3);
+            const td4 = doc.createElement('td'); td4.textContent = todo.text; tr.appendChild(td4);
+            tbody2.appendChild(tr);
+            taakCount++;
+          });
+        });
+      });
+    });
+    if (taakCount === 0) {
+      const tr = doc.createElement('tr');
+      const td = doc.createElement('td');
+      td.colSpan = 4;
+      td.className = 'empty-msg';
+      td.textContent = 'Geen afgeronde taken in deze periode.';
+      tr.appendChild(td);
+      tbody2.appendChild(tr);
+    }
+    table2.appendChild(tbody2);
+    body.appendChild(table2);
+
+    onClose();
   };
 
   return (
     <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="modal-dialog">
         <div className="modal-header">
-          <h3 className="modal-title">Exporteer</h3>
+          <h3 className="modal-title">Overzicht</h3>
           <button className="icon-btn" onClick={onClose}><Close size={16}/></button>
         </div>
         <p className="modal-subtitle">{label}</p>
 
-        <div className="toggle-group" style={{marginBottom: 20}}>
-          <button className={`toggle-btn ${period === 'today'    ? 'active' : ''}`} onClick={() => setPeriod('today')}>Vandaag</button>
-          <button className={`toggle-btn ${period === 'week'     ? 'active' : ''}`} onClick={() => setPeriod('week')}>Deze week</button>
-          <button className={`toggle-btn ${period === 'lastweek' ? 'active' : ''}`} onClick={() => setPeriod('lastweek')}>Vorige week</button>
+        <div className="toggle-group" style={{marginBottom:20}}>
+          <button className={`toggle-btn ${period==='today'    ? 'active':''}`} onClick={()=>setPeriod('today')}>Vandaag</button>
+          <button className={`toggle-btn ${period==='week'     ? 'active':''}`} onClick={()=>setPeriod('week')}>Deze week</button>
+          <button className={`toggle-btn ${period==='lastweek' ? 'active':''}`} onClick={()=>setPeriod('lastweek')}>Vorige week</button>
         </div>
 
-        {/* Samenvatting */}
         <div className="export-summary">
-          {summaryProjects.length === 0 ? (
-            <div className="export-summary-empty">Geen geregistreerde tijd voor deze periode.</div>
-          ) : (
-            <>
-              {summaryProjects.map(p => {
-                const col = getProjectColor(p, p._fallbackIdx ?? 0);
-                return (
-                  <div key={p.id} className="export-summary-row">
-                    <span className="proj">
-                      <span style={{width:7,height:7,borderRadius:'50%',background:col.dot,flexShrink:0,display:'inline-block'}}/>
-                      {p.name}
-                    </span>
-                    <span className="hrs">{fmtHours(p.total)}</span>
-                  </div>
-                );
-              })}
-              <div className="export-summary-total">
-                <span className="lbl">Totaal</span>
-                <span className="val">{fmtHours(totalFittedAll)}</span>
-              </div>
-            </>
-          )}
+          {summaryProjects.length === 0
+            ? <div className="export-summary-empty">Geen geregistreerde tijd voor deze periode.</div>
+            : <>
+                {summaryProjects.map(p => {
+                  const col = getProjectColor(p, p._fi ?? 0);
+                  return (
+                    <div key={p.id} className="export-summary-row">
+                      <span className="proj">
+                        <span style={{width:7,height:7,borderRadius:'50%',background:col.dot,display:'inline-block',flexShrink:0}}/>
+                        {p.name}
+                      </span>
+                      <span className="hrs">{fmtHours(p.total)}</span>
+                    </div>
+                  );
+                })}
+                <div className="export-summary-total">
+                  <span className="lbl">Totaal</span>
+                  <span className="val">{fmtHours(totalFittedAll)}</span>
+                </div>
+              </>
+          }
         </div>
-
-        <p style={{fontSize:'0.75rem',color:'var(--text-muted)',margin:'0 0 20px'}}>
-          Excel-bestand met twee tabbladen: <em>Uren per dag</em> en <em>Notities &amp; taken</em>.
-        </p>
 
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onClose}>Annuleer</button>
-          <button className="btn btn-primary" onClick={downloadExcel} disabled={summaryProjects.length === 0}>
-            Download .xlsx
+          <button className="btn btn-primary" onClick={openReport} disabled={summaryProjects.length === 0}>
+            Open overzicht ↗
           </button>
         </div>
       </div>
