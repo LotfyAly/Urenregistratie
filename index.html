@@ -177,7 +177,57 @@
   .checkin-list-item:hover { background: var(--surface-hover); }
   .checkin-list-item.current { background: var(--surface-sunken); }
 
-  /* PiP collapsed style */
+  /* Stale-timer warning banner */
+  .stale-banner { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; animation: fadeIn 0.2s ease-out; }
+  .stale-banner-icon { font-size: 1.1rem; flex-shrink: 0; }
+  .stale-banner-text { flex: 1; font-size: 0.8rem; color: #92400e; line-height: 1.45; }
+  .stale-banner-text strong { font-weight: 600; color: #78350f; }
+  .stale-banner-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .stale-btn { padding: 5px 10px; border-radius: 6px; border: none; font-family: inherit; font-size: 0.75rem; cursor: pointer; }
+  .stale-btn-primary { background: #92400e; color: #fff; }
+  .stale-btn-primary:hover { background: #78350f; }
+  .stale-btn-secondary { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .stale-btn-secondary:hover { background: #fde68a; }
+
+  /* Handmatige tijdinvoer */
+  .manual-form { margin-top: 12px; padding: 14px 16px; background: var(--surface-sunken); border-radius: 10px; border: 1px solid var(--border-light); animation: fadeIn 0.15s ease-out; }
+  .manual-form-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-tertiary); margin-bottom: 10px; }
+  .manual-form-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+  .manual-field { display: flex; flex-direction: column; gap: 4px; }
+  .manual-field label { font-size: 0.7rem; color: var(--text-tertiary); }
+  .manual-field select, .manual-field input[type=time], .manual-field input[type=date] { padding: 7px 10px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text-primary); font-family: inherit; font-size: 0.875rem; outline: none; }
+  .manual-field select:focus, .manual-field input:focus { border-color: var(--text-tertiary); }
+  .manual-add-btn { padding: 7px 14px; border-radius: 7px; border: none; background: var(--text-primary); color: var(--surface); font-family: inherit; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+  .manual-add-btn:hover { opacity: 0.88; }
+  .manual-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .manual-toggle { background: transparent; border: none; color: var(--text-tertiary); font-size: 0.75rem; cursor: pointer; padding: 4px 0; text-decoration: underline; font-family: inherit; margin-top: 6px; }
+  .manual-toggle:hover { color: var(--text-secondary); }
+
+  /* Instellingen eindtijd */
+  .settings-row { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: var(--text-secondary); flex-wrap: wrap; }
+  .settings-row input[type=time] { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-primary); font-family: inherit; font-size: 0.8rem; outline: none; }
+  .settings-row input[type=time]:focus { border-color: var(--text-tertiary); }
+  .settings-row input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+  .settings-block { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; background: var(--surface-sunken); border-radius: 8px; border: 1px solid var(--border-light); }
+
+  /* Sessie bewerken in DayDetail */
+  .session-row-wrap { position: relative; }
+  .session-actions { display: inline-flex; gap: 2px; margin-left: auto; opacity: 0; transition: opacity 0.15s; }
+  .day-detail-session:hover .session-actions { opacity: 1; }
+  .session-action-btn { padding: 3px; border-radius: 4px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: inline-flex; align-items: center; transition: background 0.15s, color 0.15s; }
+  .session-action-btn:hover { background: var(--surface); color: var(--text-secondary); }
+  .session-action-btn.danger:hover { color: var(--danger); }
+  .session-edit-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px 8px 18px; margin: 4px 0 4px 6px; border-left: 2px solid var(--accent); background: var(--surface); border-radius: 6px; animation: fadeIn 0.15s ease-out; }
+  .session-edit-form input[type=time], .session-edit-form input[type=date] { padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-primary); font-family: inherit; font-size: 0.8rem; outline: none; }
+  .session-edit-form input:focus { border-color: var(--text-tertiary); }
+  .session-edit-form .field-label { font-size: 0.7rem; color: var(--text-tertiary); }
+  .session-edit-form .form-actions { display: flex; gap: 4px; margin-left: auto; }
+  .session-edit-form .save-btn { padding: 5px 12px; border-radius: 6px; border: none; background: var(--text-primary); color: var(--surface); font-family: inherit; font-size: 0.75rem; cursor: pointer; }
+  .session-edit-form .save-btn:hover { opacity: 0.88; }
+  .session-edit-form .cancel-btn { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-tertiary); font-family: inherit; font-size: 0.75rem; cursor: pointer; }
+  .session-edit-form .cancel-btn:hover { background: var(--surface-hover); color: var(--text-secondary); }
+  .session-edit-error { width: 100%; font-size: 0.72rem; color: var(--danger); margin-top: 2px; }
+  .session-active-badge { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); padding: 1px 6px; border-radius: 999px; background: rgba(180,83,9,0.1); margin-left: 4px; }
   .pip-collapsed { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--surface); border: none; cursor: pointer; padding: 0; position: relative; transition: background 0.15s; }
   .pip-collapsed:hover { background: var(--surface-hover); }
   .pip-collapsed-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; }
@@ -226,7 +276,65 @@
   .pip-todo-add input { flex: 1; background: transparent; border: none; outline: none; font-size: 11px; color: var(--text-primary); font-family: inherit; }
   .pip-todo-add input::placeholder { color: var(--text-muted); }
 
-  /* Export modal */
+  /* Klikbare uren in week-overzicht */
+  .day-total-clickable, .phours-clickable {
+    background: transparent; border: none; padding: 0; cursor: pointer; font: inherit;
+    color: inherit; transition: background 0.12s, color 0.12s;
+    border-radius: 4px;
+  }
+  .day-total-clickable { padding: 1px 6px; }
+  .day-total-clickable:hover { background: var(--surface-hover); color: var(--accent); }
+  .phours-clickable { padding: 1px 4px; font-variant-numeric: tabular-nums; color: var(--text-tertiary); flex-shrink: 0; }
+  .phours-clickable:hover { background: var(--surface-hover); color: var(--text-primary); }
+  .phours-clickable.is-override, .day-total-clickable.is-override { color: var(--accent); font-weight: 500; }
+  .phours-clickable.is-override::after, .day-total-clickable.is-override::after {
+    content: '✎'; font-size: 0.6em; margin-left: 3px; opacity: 0.65;
+  }
+  .day-edit-btn {
+    position: absolute; top: 6px; right: 6px;
+    padding: 3px; border-radius: 4px;
+    background: transparent; border: none; cursor: pointer;
+    color: var(--text-disabled); display: flex; align-items: center;
+    transition: opacity 0.15s, color 0.15s, background 0.15s;
+    opacity: 0;
+  }
+  .day-col { position: relative; }
+  .day-col:hover .day-edit-btn { opacity: 1; }
+  .day-col.has-overrides .day-edit-btn { opacity: 1; color: var(--accent); }
+  .day-edit-btn:hover { background: var(--surface); color: var(--text-secondary); }
+  .day-col.has-overrides::before {
+    content: ''; position: absolute; top: 0; left: 8px; right: 8px; height: 2px;
+    background: var(--accent); border-radius: 0 0 2px 2px; opacity: 0.45;
+  }
+
+  /* Day-hours-dialog (override editor) */
+  .dh-dialog { background: var(--surface); border-radius: 18px; padding: 26px 28px 22px; max-width: 480px; width: 100%; box-shadow: 0 24px 64px rgba(28, 25, 23, 0.18); border: 1px solid var(--border); animation: slideIn 0.25s ease-out; max-height: 90vh; overflow-y: auto; }
+  .dh-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 4px; gap: 10px; }
+  .dh-title { font-family: "Fraunces", serif; font-size: 1.4rem; font-weight: 500; line-height: 1.2; color: var(--text-primary); margin: 0; }
+  .dh-sub { font-size: 0.78rem; color: var(--text-tertiary); margin: 0 0 18px; }
+  .dh-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .dh-row { display: grid; grid-template-columns: 14px 1fr 110px 32px; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--surface-sunken); border: 1px solid var(--border-light); }
+  .dh-row.is-override { background: rgba(180, 83, 9, 0.06); border-color: rgba(180, 83, 9, 0.25); }
+  .dh-row .dh-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dh-row .dh-name { font-size: 0.875rem; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dh-row .dh-input-wrap { display: flex; align-items: center; gap: 4px; justify-self: end; }
+  .dh-row input[type=number] { width: 64px; padding: 5px 7px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-primary); font-family: inherit; font-size: 0.85rem; outline: none; text-align: right; font-variant-numeric: tabular-nums; }
+  .dh-row input[type=number]:focus { border-color: var(--text-tertiary); }
+  .dh-row .dh-unit { font-size: 0.75rem; color: var(--text-tertiary); }
+  .dh-row .dh-reset { padding: 5px; border-radius: 5px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; }
+  .dh-row .dh-reset:hover { background: var(--surface-hover); color: var(--danger); }
+  .dh-row .dh-reset:disabled { opacity: 0.25; cursor: not-allowed; }
+  .dh-row .dh-natural { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; grid-column: 2 / 3; }
+  .dh-row .dh-natural-line { display: flex; flex-direction: column; min-width: 0; }
+  .dh-totals { display: flex; justify-content: space-between; align-items: center; padding: 12px 12px; border-top: 1px solid var(--border); margin-top: 4px; font-size: 0.85rem; }
+  .dh-totals .dh-total-label { color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; }
+  .dh-totals .dh-total-value { font-family: "Fraunces", serif; font-size: 1.1rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .dh-actions { display: flex; gap: 8px; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .dh-clear-all { background: transparent; border: none; color: var(--text-tertiary); font-family: inherit; font-size: 0.78rem; cursor: pointer; text-decoration: underline; padding: 4px 0; }
+  .dh-clear-all:hover { color: var(--danger); }
+  .dh-clear-all:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: none; }
+  .dh-info { font-size: 0.72rem; color: var(--text-tertiary); padding: 8px 12px; background: var(--surface-sunken); border-radius: 7px; margin-bottom: 12px; line-height: 1.45; }
+
   .export-btn { padding: 6px 12px; border-radius: 6px; background: transparent; border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; font-family: inherit; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; transition: background 0.15s, color 0.15s; }
   .export-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
   .modal-overlay { position: fixed; inset: 0; background: rgba(28, 25, 23, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadeIn 0.2s ease-out; }
@@ -280,6 +388,7 @@ const ChevL  = (p) => <Svg {...p}><path d="m15 18-6-6 6-6"/></Svg>;
 const Min    = (p) => <Svg {...p}><path d="M5 12h14"/></Svg>;
 const Grip   = (p) => <Svg {...p}><circle cx="9" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="9" cy="19" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="19" r="1" fill="currentColor" stroke="none"/></Svg>;
 const XSmall = (p) => <Svg {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Svg>;
+const Cast   = (p) => <Svg {...p}><path d="M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/><path d="M2 12a9 9 0 0 1 8 8"/><path d="M2 16a5 5 0 0 1 4 4"/><line x1="2" y1="20" x2="2.01" y2="20"/></Svg>;
 
 const COLORS = [
   { dot: '#b45309', soft: 'rgba(180,83,9,0.13)',   ring: 'rgba(180,83,9,0.4)'   }, // amber
@@ -383,29 +492,80 @@ const monthNL = (d) => ['januari','februari','maart','april','mei','juni','juli'
 const escapeHTML = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 // Sessies die overlappen met [start, end) — gesorteerd op starttijd, geknipt op grenzen
-const sessionsInRange = (sessions, start, end, now) => {
+// Optioneel: workClip = { startH, startM, endH, endM } om sessies binnen werkuren te clippen
+//   - Voor sessies die meerdere dagen omspannen wordt elk dag-segment apart geclipt;
+//     als de [start, end] range minder dan een dag is wordt de werkuren-clip op die ene dag toegepast.
+const sessionsInRange = (sessions, start, end, now, workClip = null) => {
+  // Helper: clip [a,b] op werkuren binnen één kalenderdag (dayStart = 00:00 van die dag)
+  const clipToWorkInDay = (a, b, dayStart) => {
+    if (!workClip) return { a, b };
+    const ws = dayStart + (workClip.startH * 60 + workClip.startM) * 60000;
+    const we = dayStart + (workClip.endH   * 60 + workClip.endM)   * 60000;
+    return { a: Math.max(a, ws), b: Math.min(b, we) };
+  };
+
   return sessions
     .filter(s => {
       const sEnd = s.endTime ?? now;
       return sEnd > start && s.startTime < end;
     })
-    .map(s => {
+    .flatMap(s => {
       const sEnd = s.endTime ?? now;
-      return {
-        ...s,
-        clippedStart: Math.max(s.startTime, start),
-        clippedEnd: Math.min(sEnd, end),
-      };
+      const cs0 = Math.max(s.startTime, start);
+      const ce0 = Math.min(sEnd, end);
+      if (ce0 <= cs0) return [];
+
+      if (!workClip) {
+        return [{ ...s, clippedStart: cs0, clippedEnd: ce0 }];
+      }
+
+      // Loop over alle kalenderdagen tussen cs0 en ce0 en clip elk segment op werkuren
+      const out = [];
+      const cursor = new Date(cs0);
+      cursor.setHours(0, 0, 0, 0);
+      while (cursor.getTime() < ce0) {
+        const dayStart = cursor.getTime();
+        const dayEnd = dayStart + 86400000;
+        const segStart = Math.max(cs0, dayStart);
+        const segEnd   = Math.min(ce0, dayEnd);
+        const { a, b } = clipToWorkInDay(segStart, segEnd, dayStart);
+        if (b > a) out.push({ ...s, clippedStart: a, clippedEnd: b });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      return out;
     })
     .sort((a, b) => a.clippedStart - b.clippedStart);
 };
 
+// Parse 'HH:MM' naar { h, m }
+const parseHHMM = (str) => {
+  if (!str || typeof str !== 'string') return { h: 0, m: 0 };
+  const [hh, mm] = str.split(':').map(n => parseInt(n, 10));
+  return { h: isFinite(hh) ? hh : 0, m: isFinite(mm) ? mm : 0 };
+};
+// Maak een workClip-object op basis van instellingen, of null als niet actief / ongeldig
+const buildWorkClip = (enabled, startStr, endStr) => {
+  if (!enabled) return null;
+  const s = parseHHMM(startStr);
+  const e = parseHHMM(endStr);
+  const sm = s.h * 60 + s.m;
+  const em = e.h * 60 + e.m;
+  if (em <= sm) return null;
+  return { startH: s.h, startM: s.m, endH: e.h, endM: e.m };
+};
+
 // Bouw dag-blocks (datum, sessies per project, totalen) voor een gegeven set dagen
-const buildDayBlocks = (dates, projects, sessions, now) => {
+// overrides: { 'YYYY-MM-DD': { projectId: hoursValue } } — vervangt berekende uren per project per dag
+const dateKeyOf = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+const buildDayBlocks = (dates, projects, sessions, now, workClip = null, overrides = null) => {
   return dates.map(date => {
     const start = date.getTime();
     const end = start + 86400000;
-    const inRange = sessionsInRange(sessions, start, end, now);
+    const inRange = sessionsInRange(sessions, start, end, now, workClip);
+    const dKey = dateKeyOf(date);
+    const dayOverrides = overrides && overrides[dKey] ? overrides[dKey] : null;
+
     // Groepeer per project
     const byProjectMap = new Map();
     for (const s of inRange) {
@@ -422,15 +582,46 @@ const buildDayBlocks = (dates, projects, sessions, now) => {
       totalMs += dur;
     }
     const dist = computeDistribution(perProject, projects);
-    // Bouw byProject lijst (alleen projecten met afgeronde uren > 0, en geprojecteerde sessies)
-    const byProject = dist.fitted
+
+    // Combineer berekende waarden met overrides
+    // - Voor elk project: gebruik override als die er is, anders berekende waarde
+    // - Projecten kunnen ook alleen via override aanwezig zijn (zonder sessies)
+    const naturalById = new Map(dist.fitted.map(x => [x.id, x]));
+    const overrideIds = dayOverrides ? Object.keys(dayOverrides) : [];
+    const allIds = new Set([...naturalById.keys(), ...overrideIds]);
+
+    const fittedItems = [];
+    let totalFitted = 0;
+    for (const pid of allIds) {
+      const proj = projects.find(p => p.id === pid);
+      if (!proj) continue;
+      const natural = naturalById.get(pid);
+      const naturalHours = natural ? natural.hoursFitted : 0;
+      const hasOverride = dayOverrides && Object.prototype.hasOwnProperty.call(dayOverrides, pid);
+      const hoursFitted = hasOverride ? Number(dayOverrides[pid]) : naturalHours;
+      if (hoursFitted > 0) {
+        fittedItems.push({
+          id: pid,
+          name: proj.name,
+          hoursRaw: msToHours(perProject.get(pid) || 0),
+          hoursFitted,
+          isOverride: hasOverride,
+          naturalHours,
+        });
+        totalFitted += hoursFitted;
+      }
+    }
+    fittedItems.sort((a, b) => b.hoursFitted - a.hoursFitted);
+
+    // Bouw byProject lijst (alleen projecten met uren > 0, en geprojecteerde sessies)
+    const byProject = fittedItems
       .map(x => ({
         ...x,
         ms: perProject.get(x.id) || 0,
         sessions: byProjectMap.get(x.id) || [],
-      }))
-      .sort((a, b) => b.hoursFitted - a.hoursFitted);
-    return { date, totalMs, totalFitted: dist.totalFitted, fitted: dist.fitted, byProject };
+      }));
+
+    return { date, dateKey: dKey, totalMs, totalFitted, fitted: fittedItems, byProject };
   });
 };
 
@@ -458,6 +649,8 @@ function App() {
   const [pipContainer, setPipContainer] = useState(null);
   const [pipCollapsed, setPipCollapsed] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [castOpen, setCastOpen] = useState(false);
+  const castChannelRef = useRef(null);
 
   // Houd actuele sessions vast voor switchTo/delete (voorkomt stale closure bij snelle klikken)
   const sessionsRef = useRef([]);
@@ -466,6 +659,83 @@ function App() {
   const [checkInDialog, setCheckInDialog] = useState(null);
   const [checkInMode, setCheckInMode] = useState('ask');
   const checkInsRef = useRef(new Set());
+
+  // Stale-timer: getoond bij openen als timer > 2u geleden is gestart
+  const [staleWarning, setStaleWarning] = useState(null); // { projectName, hoursRunning }
+
+  // Instellingen: auto-stop eindtijd
+  const [autoStopEnabled, setAutoStopEnabled] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('tijden:autoStop') || 'false'); } catch { return false; }
+  });
+  const [autoStopTime, setAutoStopTime] = useState(() => {
+    try { return localStorage.getItem('tijden:autoStopTime') || '18:00'; } catch { return '18:00'; }
+  });
+  const autoStopRef = useRef({ enabled: autoStopEnabled, time: autoStopTime, firedToday: '' });
+
+  useEffect(() => {
+    autoStopRef.current = { ...autoStopRef.current, enabled: autoStopEnabled, time: autoStopTime };
+    try { localStorage.setItem('tijden:autoStop', JSON.stringify(autoStopEnabled)); } catch {}
+    try { localStorage.setItem('tijden:autoStopTime', autoStopTime); } catch {}
+  }, [autoStopEnabled, autoStopTime]);
+
+  // Instellingen: werkuren-begrenzing (clipping in alle berekeningen)
+  const [workClipEnabled, setWorkClipEnabled] = useState(() => {
+    try {
+      const stored = localStorage.getItem('tijden:workClipEnabled');
+      return stored === null ? true : JSON.parse(stored);   // standaard AAN
+    } catch { return true; }
+  });
+  const [workStartTime, setWorkStartTime] = useState(() => {
+    try { return localStorage.getItem('tijden:workStartTime') || '07:00'; } catch { return '07:00'; }
+  });
+  const [workEndTime, setWorkEndTime] = useState(() => {
+    try { return localStorage.getItem('tijden:workEndTime') || '18:00'; } catch { return '18:00'; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('tijden:workClipEnabled', JSON.stringify(workClipEnabled)); } catch {}
+    try { localStorage.setItem('tijden:workStartTime', workStartTime); } catch {}
+    try { localStorage.setItem('tijden:workEndTime', workEndTime); } catch {}
+  }, [workClipEnabled, workStartTime, workEndTime]);
+
+  const workClip = useMemo(
+    () => buildWorkClip(workClipEnabled, workStartTime, workEndTime),
+    [workClipEnabled, workStartTime, workEndTime]
+  );
+
+  // Handmatige uren-overrides per dag per project (vervangt berekende uren)
+  // Format: { 'YYYY-MM-DD': { projectId: hoursValue } }
+  const [overrides, setOverridesState] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('tijden:overrides') || '{}'); } catch { return {}; }
+  });
+  // Zet/wijzig override voor één project op één dag (hours = number > 0, of null = wis override)
+  // Functional setState voorkomt race-conditions bij snelle achtereenvolgende calls
+  const setProjectOverride = (dateKey, projectId, hours) => {
+    setOverridesState(prev => {
+      const next = { ...prev };
+      const dayMap = { ...(next[dateKey] || {}) };
+      if (hours == null || hours === '' || isNaN(Number(hours)) || Number(hours) <= 0) {
+        delete dayMap[projectId];
+      } else {
+        dayMap[projectId] = Number(hours);
+      }
+      if (Object.keys(dayMap).length === 0) delete next[dateKey];
+      else next[dateKey] = dayMap;
+      try { localStorage.setItem('tijden:overrides', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+  // Wis alle overrides voor een dag
+  const clearDayOverrides = (dateKey) => {
+    setOverridesState(prev => {
+      const next = { ...prev };
+      delete next[dateKey];
+      try { localStorage.setItem('tijden:overrides', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  // Handmatige tijdinvoer
+  const [showManual, setShowManual] = useState(false);
 
   useEffect(() => {
     const i = setInterval(() => setNow(Date.now()), 1000);
@@ -477,6 +747,16 @@ function App() {
       const [p, s] = await Promise.all([db.getProjects(), db.getSessions()]);
       setProjects(p); setSessions(s);
       sessionsRef.current = s;
+
+      // Detecteer stale timer: actieve sessie die > 2u geleden gestart is
+      const openSess = s.find(sess => !sess.endTime);
+      if (openSess) {
+        const runningMs = Date.now() - openSess.startTime;
+        if (runningMs > 2 * 3600000) {
+          const proj = p.find(pr => pr.id === openSess.projectId);
+          setStaleWarning({ sessionId: openSess.id, projectName: proj?.name || 'Onbekend', hoursRunning: msToHours(runningMs) });
+        }
+      }
       const today = new Date().toDateString();
       try {
         const saved = JSON.parse(localStorage.getItem(`tijden:checkins-${today}`) || '[]');
@@ -489,14 +769,51 @@ function App() {
   const activeSession = useMemo(() => sessions.find(s => !s.endTime) || null, [sessions]);
   const activeProject = useMemo(() => activeSession ? projects.find(p => p.id === activeSession.projectId) : null, [activeSession, projects]);
 
-  // Halfuurlijkse check-in
+  // BroadcastChannel: stuur live state naar cast-venster
+  useEffect(() => {
+    if (!castOpen) return;
+    if (!castChannelRef.current) {
+      castChannelRef.current = new BroadcastChannel('tijden-cast');
+    }
+    const ch = castChannelRef.current;
+    const payload = {
+      type: 'state',
+      now: Date.now(),
+      activeSession,
+      activeProject,
+      projects,
+      todayPerProject: Object.fromEntries(todayPerProject),
+      totalTodayMs,
+    };
+    ch.postMessage(payload);
+  }, [castOpen, activeSession, activeProject, projects, now]);
   useEffect(() => {
     const checkNow = () => {
-      if (!activeSession || checkInDialog) return;
       const d = new Date();
       const day = d.getDay();
-      if (day === 0 || day === 6) return;
       const h = d.getHours(), m = d.getMinutes();
+      const timeStr = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+
+      // Auto-stop op ingestelde eindtijd
+      const ref = autoStopRef.current;
+      if (ref.enabled && ref.time && timeStr === ref.time) {
+        const todayKey = d.toDateString() + ref.time;
+        if (ref.firedToday !== todayKey) {
+          autoStopRef.current = { ...ref, firedToday: todayKey };
+          const cur = sessionsRef.current;
+          const open = cur.find(s => !s.endTime);
+          if (open) {
+            const next = cur.map(s => s.id === open.id ? { ...s, endTime: d.getTime() } : s);
+            setSessions(next);
+            sessionsRef.current = next;
+            db.saveSessions(next).catch(console.error);
+          }
+        }
+      }
+
+      // Check-in
+      if (!sessionsRef.current.find(s => !s.endTime) || checkInDialog) return;
+      if (day === 0 || day === 6) return;
       if (h < 8 || h >= 17) return;
       if (m !== 0 && m !== 30) return;
       if (h === 8 && m === 0) return;
@@ -506,30 +823,35 @@ function App() {
       checkInsRef.current.add(key);
       try { localStorage.setItem(`tijden:checkins-${today}`, JSON.stringify(Array.from(checkInsRef.current).filter(k => k.startsWith(today)))); } catch {}
       setCheckInMode('ask');
-      setCheckInDialog({ time: d, projectId: activeSession.projectId });
+      const openSess = sessionsRef.current.find(s => !s.endTime);
+      setCheckInDialog({ time: d, projectId: openSess.projectId });
       if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        try {
-          const proj = projects.find(p => p.id === activeSession.projectId);
-          new Notification('Tijden — check-in', { body: `Ben je nog bezig met ${proj?.name ?? 'dit project'}?` });
-        } catch {}
+        try { new Notification('Tijden — check-in', { body: 'Ben je nog bezig?' }); } catch {}
       }
     };
     const i = setInterval(checkNow, 30000);
     checkNow();
     return () => clearInterval(i);
-  }, [activeSession, checkInDialog, projects]);
+  }, [checkInDialog]);
 
   const todayStart = startOfToday();
   const todayPerProject = useMemo(() => {
     const map = new Map();
     projects.forEach(p => map.set(p.id, 0));
+    // Werkuren-grenzen voor vandaag (in ms)
+    const ws = workClip ? todayStart + (workClip.startH * 60 + workClip.startM) * 60000 : null;
+    const we = workClip ? todayStart + (workClip.endH   * 60 + workClip.endM)   * 60000 : null;
     sessions.forEach(s => {
-      const sStart = Math.max(s.startTime, todayStart);
-      const sEnd = Math.min(s.endTime ?? now, todayStart + 86400000);
+      let sStart = Math.max(s.startTime, todayStart);
+      let sEnd   = Math.min(s.endTime ?? now, todayStart + 86400000);
+      if (workClip) {
+        sStart = Math.max(sStart, ws);
+        sEnd   = Math.min(sEnd,   we);
+      }
       if (sEnd > sStart) map.set(s.projectId, (map.get(s.projectId) || 0) + (sEnd - sStart));
     });
     return map;
-  }, [sessions, projects, todayStart, now]);
+  }, [sessions, projects, todayStart, now, workClip]);
 
   const totalTodayMs = useMemo(() => {
     let t = 0; todayPerProject.forEach(v => t += v); return t;
@@ -597,7 +919,28 @@ function App() {
     db.saveSessions(next).catch(console.error);
   };
 
-  // Herordenen van projecten via drag & drop
+  // Handmatige sessie toevoegen
+  const addManualSession = async (projectId, startTs, endTs) => {
+    if (!projectId || !startTs || !endTs || endTs <= startTs) return false;
+    // Knip over-middernacht sessies in twee
+    const dayBoundary = new Date(startTs);
+    dayBoundary.setHours(24, 0, 0, 0);
+    if (endTs > dayBoundary.getTime()) {
+      // Dag 1: start → middernacht
+      const s1 = { id: uuid(), projectId, startTime: startTs, endTime: dayBoundary.getTime(), todos: [], manual: true };
+      // Dag 2: middernacht → einde
+      const s2 = { id: uuid(), projectId, startTime: dayBoundary.getTime(), endTime: endTs, todos: [], manual: true };
+      const next = [...sessionsRef.current, s1, s2];
+      setSessions(next); sessionsRef.current = next;
+      await db.saveSessions(next);
+    } else {
+      const s = { id: uuid(), projectId, startTime: startTs, endTime: endTs, todos: [], manual: true };
+      const next = [...sessionsRef.current, s];
+      setSessions(next); sessionsRef.current = next;
+      await db.saveSessions(next);
+    }
+    return true;
+  };
   const reorderProjects = async (fromId, toId) => {
     if (fromId === toId) return;
     const fromIdx = projects.findIndex(p => p.id === fromId);
@@ -608,6 +951,34 @@ function App() {
     next.splice(toIdx, 0, moved);
     setProjects(next);
     await db.saveProjects(next);
+  };
+
+  // Sessie aanpassen (begin- en/of eindtijd) — voor handmatige correctie in weekoverzicht
+  const updateSession = async (sessionId, newStart, newEnd) => {
+    if (!sessionId || !newStart || !newEnd || newEnd <= newStart) return false;
+    if (newEnd > Date.now() + 60000) return false;   // niet in de toekomst
+    const current = sessionsRef.current;
+    const target = current.find(s => s.id === sessionId);
+    if (!target) return false;
+    // Open sessies (actieve timer) niet via dit pad bewerken
+    if (target.endTime == null) return false;
+    const next = current.map(s => s.id === sessionId ? { ...s, startTime: newStart, endTime: newEnd } : s);
+    setSessions(next);
+    sessionsRef.current = next;
+    await db.saveSessions(next);
+    return true;
+  };
+
+  // Sessie verwijderen
+  const deleteSession = async (sessionId) => {
+    if (!sessionId) return false;
+    if (!confirm('Sessie verwijderen?')) return false;
+    const current = sessionsRef.current;
+    const next = current.filter(s => s.id !== sessionId);
+    setSessions(next);
+    sessionsRef.current = next;
+    await db.saveSessions(next);
+    return true;
   };
 
   // PiP
@@ -655,6 +1026,22 @@ function App() {
     setPipCollapsed(next);
   };
 
+  const openCast = () => {
+    if (!('BroadcastChannel' in window)) {
+      alert('BroadcastChannel wordt niet ondersteund in deze browser. Gebruik Chrome of Edge.');
+      return;
+    }
+    const castHtml = buildCastHtml();
+    const blob = new Blob([castHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank', 'width=1280,height=720');
+    if (!win) { alert('Pop-up geblokkeerd. Sta pop-ups toe voor deze pagina.'); return; }
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    castChannelRef.current = new BroadcastChannel('tijden-cast');
+    setCastOpen(true);
+    win.addEventListener('beforeunload', () => setCastOpen(false));
+  };
+
   const enableNotifications = async () => {
     if (typeof Notification === 'undefined') { alert('Notificaties worden niet ondersteund.'); return; }
     if (Notification.permission === 'granted') { alert('Notificaties staan al aan.'); return; }
@@ -683,6 +1070,21 @@ function App() {
         </div>
       </header>
 
+      {/* Stale-timer waarschuwing */}
+      {staleWarning && (
+        <StaleBanner
+          warning={staleWarning}
+          onCorrect={(endTs) => {
+            const cur = sessionsRef.current;
+            const next = cur.map(s => s.id === staleWarning.sessionId ? { ...s, endTime: endTs } : s);
+            setSessions(next); sessionsRef.current = next;
+            db.saveSessions(next).catch(console.error);
+            setStaleWarning(null);
+          }}
+          onKeep={() => setStaleWarning(null)}
+        />
+      )}
+
       {/* Actieve timer */}
       <div className="timer-card" style={{ background: activeProject ? c.soft : C.surface, border: `1px solid ${activeProject ? c.ring : 'var(--border)'}` }}>
         <div className="timer-row">
@@ -693,6 +1095,9 @@ function App() {
             </span>
           </div>
           <div className="timer-actions">
+            <button className="icon-btn" onClick={openCast} title="Open cast-venster" style={castOpen ? {color:'var(--accent)'} : {}}>
+              <Cast size={14}/><span>Cast</span>
+            </button>
             <button className="icon-btn" onClick={pipWindow ? closePip : openPip} title={pipWindow ? 'Sluit PiP' : 'Open PiP'}>
               {pipWindow ? <Close size={14}/> : <Ext size={14}/>}<span>{pipWindow ? 'Sluit PiP' : 'PiP'}</span>
             </button>
@@ -713,6 +1118,40 @@ function App() {
           />
         )}
       </div>
+
+      {/* Auto-stop instelling */}
+      <div style={{marginTop:10, display:'flex', alignItems:'center', gap:8, flexWrap:'wrap'}}>
+        <div className="settings-row">
+          <input type="checkbox" id="autostop" checked={autoStopEnabled} onChange={e => setAutoStopEnabled(e.target.checked)} />
+          <label htmlFor="autostop" style={{cursor:'pointer', color:C.textTertiary, fontSize:'0.8rem'}}>Automatisch stoppen om</label>
+          <input type="time" value={autoStopTime} onChange={e => setAutoStopTime(e.target.value)} style={{opacity: autoStopEnabled ? 1 : 0.4}} />
+        </div>
+        <button className="manual-toggle" onClick={() => setShowManual(v => !v)}>
+          {showManual ? 'Verberg tijdinvoer' : '+ Tijd handmatig toevoegen'}
+        </button>
+      </div>
+
+      {/* Werkuren-begrenzing instelling */}
+      <div style={{marginTop:8}}>
+        <div className="settings-row">
+          <input type="checkbox" id="workclip" checked={workClipEnabled} onChange={e => setWorkClipEnabled(e.target.checked)} />
+          <label htmlFor="workclip" style={{cursor:'pointer', color:C.textTertiary, fontSize:'0.8rem'}}>Begrens registratie tussen</label>
+          <input type="time" value={workStartTime} onChange={e => setWorkStartTime(e.target.value)} style={{opacity: workClipEnabled ? 1 : 0.4}} />
+          <span style={{color:C.textTertiary, fontSize:'0.8rem'}}>en</span>
+          <input type="time" value={workEndTime} onChange={e => setWorkEndTime(e.target.value)} style={{opacity: workClipEnabled ? 1 : 0.4}} />
+        </div>
+      </div>
+
+      {/* Handmatige tijdinvoer */}
+      {showManual && (
+        <ManualTimeForm
+          projects={projects}
+          onAdd={async (projectId, startTs, endTs) => {
+            const ok = await addManualSession(projectId, startTs, endTs);
+            if (ok) setShowManual(false);
+          }}
+        />
+      )}
 
       {/* Projecten */}
       <section className="section">
@@ -746,7 +1185,18 @@ function App() {
           <h2 className="label" style={{margin:0}}>Werkweek</h2>
           <button className="export-btn" onClick={() => setExportOpen(true)}>Exporteer</button>
         </div>
-        <WeekColumns projects={projects} sessions={sessions} now={now} />
+        <WeekColumns
+          projects={projects}
+          sessions={sessions}
+          now={now}
+          workClip={workClip}
+          overrides={overrides}
+          activeSessionId={activeSession?.id}
+          onUpdateSession={updateSession}
+          onDeleteSession={deleteSession}
+          onSetProjectOverride={setProjectOverride}
+          onClearDayOverrides={clearDayOverrides}
+        />
       </section>
 
       <footer className="footer">
@@ -787,6 +1237,8 @@ function App() {
           projects={projects}
           sessions={sessions}
           now={now}
+          workClip={workClip}
+          overrides={overrides}
           onClose={() => setExportOpen(false)}
         />
       )}
@@ -989,6 +1441,189 @@ function ProjectList({ projects, activeSession, todayPerProject, editingId, edit
 }
 
 // =========================================================
+// CAST VENSTER HTML
+// =========================================================
+const buildCastHtml = () => {
+  const CAST_COLORS = "['#b45309','#047857','#be123c','#0369a1','#6d28d9','#4d7c0f','#0e7490','#c2410c','#b91c1c','#1d4ed8','#7c3aed','#0f766e']";
+  return '<!DOCTYPE html>\n' +
+  '<html lang="nl"><head><meta charset="UTF-8"/><title>Tijden \xb7 Cast</title>\n' +
+  '<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">\n' +
+  '<style>\n' +
+  '*{box-sizing:border-box;margin:0;padding:0}\n' +
+  ':root{--bg:#f8f8f6;--surface:#fff;--border:#e1ddd5;--accent:#b45309;--text:#1c1917;--muted:#78716c;--dim:#c9c4ba}\n' +
+  'body{background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}\n' +
+  '.top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;gap:20px}\n' +
+  '.project-name{font-size:1.5rem;font-weight:400;text-transform:uppercase;letter-spacing:0.2em;color:var(--muted);text-align:center;min-height:2rem}\n' +
+  '.timer{font-family:"Fraunces",serif;font-size:clamp(5rem,18vw,14rem);font-weight:300;letter-spacing:-0.04em;line-height:1;font-variant-numeric:tabular-nums;color:var(--text);text-align:center}\n' +
+  '.timer.idle{color:var(--dim)}\n' +
+  '.dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:middle;flex-shrink:0}\n' +
+  '.bottom{display:flex;align-items:stretch;border-top:1px solid var(--border);background:var(--surface)}\n' +
+  '.day-total{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 32px;border-right:1px solid var(--border);gap:2px;min-width:140px}\n' +
+  '.day-total-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted)}\n' +
+  '.day-total-value{font-family:"Fraunces",serif;font-size:1.75rem;font-weight:400;font-variant-numeric:tabular-nums;color:var(--accent)}\n' +
+  '.projects-row{flex:1;display:flex;align-items:stretch;overflow:hidden}\n' +
+  '.proj-cell{flex:1;display:flex;flex-direction:column;justify-content:center;padding:12px 20px;border-right:1px solid var(--border);min-width:0}\n' +
+  '.proj-cell:last-child{border-right:none}\n' +
+  '.proj-cell-name{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:4px}\n' +
+  '.proj-cell-time{font-family:"Fraunces",serif;font-size:1.3rem;font-weight:400;font-variant-numeric:tabular-nums;color:var(--text)}\n' +
+  '.proj-cell.is-active{background:rgba(180,83,9,0.05)}\n' +
+  '.proj-cell.is-active .proj-cell-time{color:var(--accent)}\n' +
+  '.wall-clock{font-size:0.75rem;color:var(--muted);padding:10px 18px;position:fixed;top:12px;right:18px;font-variant-numeric:tabular-nums;letter-spacing:0.05em}\n' +
+  '.no-data{color:var(--dim);font-size:0.9rem;margin:auto;padding:20px}\n' +
+  '@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}\n' +
+  '.dot.pulsing{animation:pulse 2s ease-in-out infinite}\n' +
+  '</style></head><body>\n' +
+  '<div class="wall-clock" id="wc"></div>\n' +
+  '<div class="top">\n' +
+  '  <div class="project-name" id="pn">Wacht op verbinding\u2026</div>\n' +
+  '  <div class="timer idle" id="tm">00:00:00</div>\n' +
+  '</div>\n' +
+  '<div class="bottom">\n' +
+  '  <div class="day-total"><div class="day-total-label">Vandaag</div><div class="day-total-value" id="dt">\u2014</div></div>\n' +
+  '  <div class="projects-row" id="pr"><div class="no-data">Wacht op data\u2026</div></div>\n' +
+  '</div>\n' +
+  '<script>\n' +
+  '(function(){\n' +
+  '  var ch = new BroadcastChannel("tijden-cast");\n' +
+  '  var state = null;\n' +
+  '  var COLORS = ' + CAST_COLORS + ';\n' +
+  '  function pad(n){return String(n).padStart(2,"0");}\n' +
+  '  function fmtTimer(ms){var s=Math.max(0,Math.floor(ms/1000));return pad(Math.floor(s/3600))+":"+pad(Math.floor((s%3600)/60))+":"+pad(s%60);}\n' +
+  '  function fmtH(ms){var h=Math.ceil(ms/1800000)*0.5;return h.toFixed(1).replace(".",",")+"\xa0u";}\n' +
+  '  function projColor(p,fi){return p.colorHex||COLORS[fi%COLORS.length];}\n' +
+  '  function render(){\n' +
+  '    if(!state)return;\n' +
+  '    var s=state,ap=s.activeProject,as=s.activeSession;\n' +
+  '    var now=new Date();\n' +
+  '    document.getElementById("wc").textContent=pad(now.getHours())+":"+pad(now.getMinutes())+":"+pad(now.getSeconds());\n' +
+  '    var activeMs=as?(Date.now()-as.startTime):0;\n' +
+  '    var tm=document.getElementById("tm"),pn=document.getElementById("pn");\n' +
+  '    if(ap){tm.textContent=fmtTimer(activeMs);tm.className="timer";pn.textContent=ap.name;}\n' +
+  '    else{tm.textContent="00:00:00";tm.className="timer idle";pn.textContent="Geen actieve timer";}\n' +
+  '    document.getElementById("dt").textContent=s.totalTodayMs>0?fmtH(s.totalTodayMs):"\u2014";\n' +
+  '    var row=document.getElementById("pr");\n' +
+  '    var active=s.projects.filter(function(p){return(s.todayPerProject[p.id]||0)>0;});\n' +
+  '    if(active.length===0){row.innerHTML=\'<div class="no-data">Nog geen tijd vandaag</div>\';return;}\n' +
+  '    row.innerHTML="";\n' +
+  '    active.forEach(function(p){\n' +
+  '      var fi=s.projects.findIndex(function(x){return x.id===p.id;});\n' +
+  '      var ms=s.todayPerProject[p.id]||0;\n' +
+  '      var isAct=ap&&ap.id===p.id;\n' +
+  '      var col=projColor(p,fi);\n' +
+  '      var cell=document.createElement("div");\n' +
+  '      cell.className="proj-cell"+(isAct?" is-active":"");\n' +
+  '      cell.innerHTML=\'<div class="proj-cell-name"><span class="dot\'+(isAct?\' pulsing\':\'\')+\'" style="background:\'+col+\'"></span>\'+p.name+\'</div>\'+\'<div class="proj-cell-time">\'+fmtH(ms)+\'</div>\';\n' +
+  '      row.appendChild(cell);\n' +
+  '    });\n' +
+  '  }\n' +
+  '  ch.onmessage=function(e){if(e.data&&e.data.type==="state"){state=e.data;render();}}\n' +
+  '  setInterval(function(){if(state)render();},1000);\n' +
+  '})();\n' +
+  '<\/script>\n' +
+  '</body></html>';
+};
+
+// =========================================================
+// STALE TIMER BANNER
+// =========================================================
+function StaleBanner({ warning, onCorrect, onKeep }) {
+  const h = Math.floor(warning.hoursRunning);
+  const m = Math.round((warning.hoursRunning - h) * 60);
+  const label = h > 0 ? `${h}u ${m}m` : `${m}m`;
+
+  // Standaard correctietijd: eindtijd van gisteren 18:00
+  const defaultEnd = () => {
+    const d = new Date();
+    d.setHours(18, 0, 0, 0);
+    // Als de sessie gisteren startte, zet eindtijd op gisteren 18:00
+    if (d.getTime() > Date.now()) d.setDate(d.getDate() - 1);
+    return d.getTime();
+  };
+  const [endTs, setEndTs] = useState(defaultEnd);
+
+  const timeVal = () => {
+    const d = new Date(endTs);
+    return d.toISOString().slice(0, 16); // yyyy-mm-ddTHH:MM
+  };
+
+  return (
+    <div className="stale-banner">
+      <span className="stale-banner-icon">⚠️</span>
+      <div className="stale-banner-text">
+        <strong>{warning.projectName}</strong> loopt al {label}. Vergeten te stoppen?
+        <div style={{marginTop:6,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+          <span style={{fontSize:'0.75rem',color:'#92400e'}}>Eindtijd:</span>
+          <input
+            type="datetime-local"
+            value={timeVal()}
+            onChange={e => setEndTs(new Date(e.target.value).getTime())}
+            style={{padding:'3px 7px',borderRadius:5,border:'1px solid #fcd34d',background:'#fffbeb',color:'#78350f',fontSize:'0.8rem',fontFamily:'inherit'}}
+          />
+        </div>
+      </div>
+      <div className="stale-banner-actions">
+        <button className="stale-btn stale-btn-primary" onClick={() => onCorrect(endTs)}>Corrigeer</button>
+        <button className="stale-btn stale-btn-secondary" onClick={onKeep}>Klopt zo</button>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================
+// HANDMATIGE TIJDINVOER
+// =========================================================
+function ManualTimeForm({ projects, onAdd }) {
+  const todayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  };
+  const [projectId, setProjectId] = useState(projects[0]?.id || '');
+  const [date, setDate]           = useState(todayStr);
+  const [startTime, setStart]     = useState('09:00');
+  const [endTime, setEnd]         = useState('10:00');
+  const [error, setError]         = useState('');
+
+  const handle = async () => {
+    if (!projectId) { setError('Kies een project.'); return; }
+    const startTs = new Date(`${date}T${startTime}`).getTime();
+    const endTs   = new Date(`${date}T${endTime}`).getTime();
+    if (isNaN(startTs) || isNaN(endTs)) { setError('Ongeldige datum of tijd.'); return; }
+    if (endTs <= startTs) { setError('Eindtijd moet na begintijd liggen.'); return; }
+    if (endTs > Date.now() + 60000) { setError('Eindtijd mag niet in de toekomst liggen.'); return; }
+    setError('');
+    await onAdd(projectId, startTs, endTs);
+  };
+
+  return (
+    <div className="manual-form">
+      <div className="manual-form-title">Tijd handmatig toevoegen</div>
+      <div className="manual-form-row">
+        <div className="manual-field">
+          <label>Project</label>
+          <select value={projectId} onChange={e => setProjectId(e.target.value)}>
+            {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
+        <div className="manual-field">
+          <label>Datum</label>
+          <input type="date" value={date} max={todayStr()} onChange={e => setDate(e.target.value)} />
+        </div>
+        <div className="manual-field">
+          <label>Begintijd</label>
+          <input type="time" value={startTime} onChange={e => setStart(e.target.value)} />
+        </div>
+        <div className="manual-field">
+          <label>Eindtijd</label>
+          <input type="time" value={endTime} onChange={e => setEnd(e.target.value)} />
+        </div>
+        <button className="manual-add-btn" onClick={handle}>Toevoegen</button>
+      </div>
+      {error && <div style={{fontSize:'0.75rem',color:'var(--danger)',marginTop:8}}>{error}</div>}
+    </div>
+  );
+}
+
+// =========================================================
 // CHECK-IN DIALOG
 // =========================================================
 function CheckInDialog({ time, projectId, projects, mode, onContinue, onSwitchMode, onSwitch, onStop, onCancelSwitch }) {
@@ -1044,9 +1679,10 @@ function CheckInDialog({ time, projectId, projects, mode, onContinue, onSwitchMo
 // =========================================================
 // WEEK COLUMNS — verticale dag-kolommen met balkje + uitklapbaar detail
 // =========================================================
-function WeekColumns({ projects, sessions, now }) {
+function WeekColumns({ projects, sessions, now, workClip = null, overrides = {}, activeSessionId = null, onUpdateSession, onDeleteSession, onSetProjectOverride, onClearDayOverrides }) {
   const [offset, setOffset]       = useState(0);
   const [expandedIdx, setExpanded] = useState(null); // index van uitgekapte dag (0-4)
+  const [editDayIdx, setEditDayIdx] = useState(null); // index van dag waarvoor uren-dialog open is
 
   const todayKey = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }, [now]);
 
@@ -1058,7 +1694,10 @@ function WeekColumns({ projects, sessions, now }) {
   }, [offset]);
 
   // Gebruik buildDayBlocks zodat session/todo-data beschikbaar is
-  const days = useMemo(() => buildDayBlocks(weekDates, projects, sessions, now), [weekDates, projects, sessions, now]);
+  const days = useMemo(
+    () => buildDayBlocks(weekDates, projects, sessions, now, workClip, overrides),
+    [weekDates, projects, sessions, now, workClip, overrides]
+  );
 
   const weekTotalFitted = days.reduce((s, d) => s + d.totalFitted, 0);
   const weekTotalMs     = days.reduce((s, d) => s + d.totalMs, 0);
@@ -1077,23 +1716,33 @@ function WeekColumns({ projects, sessions, now }) {
           <span className="week-label-dates">{labelDates}</span>
         </div>
         <div className="week-arrows">
-          <button className="week-arrow" onClick={() => { setOffset(o => o - 1); setExpanded(null); }} title="Vorige week"><ChevL size={14}/></button>
-          <button className="week-arrow week-arrow-now" onClick={() => { setOffset(0); setExpanded(null); }} disabled={offset === 0} title="Deze week">Nu</button>
-          <button className="week-arrow" onClick={() => { setOffset(o => o + 1); setExpanded(null); }} title="Volgende week"><ChevR size={14}/></button>
+          <button className="week-arrow" onClick={() => { setOffset(o => o - 1); setExpanded(null); setEditDayIdx(null); }} title="Vorige week"><ChevL size={14}/></button>
+          <button className="week-arrow week-arrow-now" onClick={() => { setOffset(0); setExpanded(null); setEditDayIdx(null); }} disabled={offset === 0} title="Deze week">Nu</button>
+          <button className="week-arrow" onClick={() => { setOffset(o => o + 1); setExpanded(null); setEditDayIdx(null); }} title="Volgende week"><ChevR size={14}/></button>
         </div>
       </div>
 
       <div className="week-grid">
         {days.map((day, idx) => {
           const isToday      = day.date.getTime() === todayKey;
-          const hasData      = day.totalMs > 0;
+          const hasData      = day.totalMs > 0 || (day.fitted.length > 0);
           const hasRounded   = day.fitted.length > 0;
           const isExpanded   = expandedIdx === idx;
           const wrapHeightPx = 140;
           const dayScale     = Math.max(8, day.totalFitted);
+          const dayHasOverrides = !!(overrides[day.dateKey] && Object.keys(overrides[day.dateKey]).length > 0);
+          const totalIsOverride = day.fitted.some(x => x.isOverride);
 
           return (
-            <div key={idx} className={`day-col ${isToday ? 'today' : ''}`}>
+            <div key={idx} className={`day-col ${isToday ? 'today' : ''} ${dayHasOverrides ? 'has-overrides' : ''}`}>
+              <button
+                className="day-edit-btn"
+                onClick={() => setEditDayIdx(idx)}
+                title="Uren bewerken"
+              >
+                <Pencil size={11}/>
+              </button>
+
               <div className="day-header">
                 <span className="day-name">{dayNamesShort[idx]}</span>
                 <span className="day-date">{day.date.getDate()} {monthShort(day.date.getMonth())}</span>
@@ -1111,8 +1760,8 @@ function WeekColumns({ projects, sessions, now }) {
                       if (segPx <= 0) return null;
                       return (
                         <div key={item.id} className="day-bar-segment"
-                          style={{ height: `${segPx}px`, background: col.dot }}
-                          title={`${item.name}: ${fmtHours(item.hoursFitted)}`} />
+                          style={{ height: `${segPx}px`, background: col.dot, opacity: item.isOverride ? 0.85 : 1 }}
+                          title={`${item.name}: ${fmtHours(item.hoursFitted)}${item.isOverride ? ' (handmatig)' : ''}`} />
                       );
                     })}
                   </div>
@@ -1122,9 +1771,24 @@ function WeekColumns({ projects, sessions, now }) {
               </div>
 
               <div className={`day-total ${!hasData ? 'zero' : ''}`}>
-                {hasData ? fmtHours(day.totalFitted) : '—'}
+                {hasData ? (
+                  <button
+                    className={`day-total-clickable ${totalIsOverride ? 'is-override' : ''}`}
+                    onClick={() => setEditDayIdx(idx)}
+                    title="Uren bewerken"
+                  >
+                    {fmtHours(day.totalFitted)}
+                  </button>
+                ) : (
+                  <button
+                    className="day-total-clickable"
+                    onClick={() => setEditDayIdx(idx)}
+                    title="Uren bewerken"
+                    style={{color:'var(--text-disabled)'}}
+                  >—</button>
+                )}
               </div>
-              {hasData && <div className="day-total-real" title="Werkelijk">{formatHMS(day.totalMs)}</div>}
+              {day.totalMs > 0 && <div className="day-total-real" title="Werkelijk geregistreerd">{formatHMS(day.totalMs)}</div>}
 
               <div className="day-projects">
                 {hasRounded ? day.fitted
@@ -1137,13 +1801,19 @@ function WeekColumns({ projects, sessions, now }) {
                       <div key={item.id} className="day-project-item">
                         <span className="ddot" style={{ background: col.dot }} />
                         <span className="pname">{item.name}</span>
-                        <span className="phours">{fmtHours(item.hoursFitted)}</span>
+                        <button
+                          className={`phours-clickable ${item.isOverride ? 'is-override' : ''}`}
+                          onClick={() => setEditDayIdx(idx)}
+                          title={item.isOverride ? `Handmatig (berekend: ${fmtHours(item.naturalHours)})` : 'Uren bewerken'}
+                        >
+                          {fmtHours(item.hoursFitted)}
+                        </button>
                       </div>
                     );
                   }) : null}
               </div>
 
-              {hasData && (
+              {day.totalMs > 0 && (
                 <button className="day-expand-btn" onClick={() => toggleExpand(idx)} title={isExpanded ? 'Inklappen' : 'Uitklappen'}>
                   {isExpanded ? <ChevL size={12} style={{transform:'rotate(90deg)'}}/> : <ChevR size={12} style={{transform:'rotate(90deg)'}}/>}
                 </button>
@@ -1158,9 +1828,24 @@ function WeekColumns({ projects, sessions, now }) {
             day={days[expandedIdx]}
             projects={projects}
             dayName={`${dayNamesShort[expandedIdx]} ${days[expandedIdx].date.getDate()} ${monthShort(days[expandedIdx].date.getMonth())}`}
+            activeSessionId={activeSessionId}
+            onUpdateSession={onUpdateSession}
+            onDeleteSession={onDeleteSession}
           />
         )}
       </div>
+
+      {editDayIdx !== null && days[editDayIdx] && (
+        <DayHoursDialog
+          day={days[editDayIdx]}
+          projects={projects}
+          dayLabel={`${dayNamesShort[editDayIdx]} ${days[editDayIdx].date.getDate()} ${monthShort(days[editDayIdx].date.getMonth())}`}
+          overrides={overrides[days[editDayIdx].dateKey] || {}}
+          onSetOverride={(projectId, hours) => onSetProjectOverride(days[editDayIdx].dateKey, projectId, hours)}
+          onClearAll={() => onClearDayOverrides(days[editDayIdx].dateKey)}
+          onClose={() => setEditDayIdx(null)}
+        />
+      )}
 
       <div className="week-total-row">
         <span className="week-total-label">Weektotaal</span>
@@ -1174,9 +1859,173 @@ function WeekColumns({ projects, sessions, now }) {
 }
 
 // =========================================================
+// DAG-UREN DIALOG — handmatig uren overschrijven per project per dag
+// =========================================================
+function DayHoursDialog({ day, projects, dayLabel, overrides, onSetOverride, onClearAll, onClose }) {
+  // Bouw één rij per project: alle bestaande projecten zichtbaar (ook zonder uren),
+  // zodat je kunt toevoegen aan een dag waar het project nog niet op stond.
+  // Lokale state voor inputvelden — pas opslaan bij blur.
+  // Belangrijk: lazy initializer (geen useEffect-reset) — voorkomt dat input gereset wordt
+  // tijdens typen wanneer de parent rerendert (bv. door 'now'-tick elke seconde).
+  const formatVal = (n) => (n == null || !isFinite(n) || Number(n) <= 0) ? '' : String(n).replace('.', ',');
+
+  const [vals, setVals] = useState(() => {
+    const m = {};
+    projects.forEach(p => {
+      const fittedItem = day.fitted.find(x => x.id === p.id);
+      const overrideVal = Object.prototype.hasOwnProperty.call(overrides, p.id) ? overrides[p.id] : null;
+      const val = overrideVal != null ? overrideVal : (fittedItem ? fittedItem.hoursFitted : 0);
+      m[p.id] = formatVal(val);
+    });
+    return m;
+  });
+
+  const parseInput = (str) => {
+    if (str == null || str === '') return null;
+    const trimmed = String(str).trim().replace(',', '.');
+    if (!/^\d*\.?\d+$/.test(trimmed)) return null;
+    const n = Number(trimmed);
+    if (!isFinite(n) || n <= 0) return null;
+    return Math.round(n * 100) / 100; // 2 decimalen max
+  };
+
+  const computeTotal = () => {
+    let t = 0;
+    Object.values(vals).forEach(v => { const n = parseInput(v); if (n != null) t += n; });
+    return t;
+  };
+
+  const handleChange = (projectId, str) => {
+    setVals(prev => ({ ...prev, [projectId]: str }));
+  };
+
+  // Bij blur: valideer, sla op of wis override, en synchroniseer altijd het inputveld
+  // zodat de UI nooit een ongeldige of stale waarde toont.
+  const handleBlur = (projectId) => {
+    const item = day.fitted.find(x => x.id === projectId);
+    const naturalHours = item ? (item.isOverride ? item.naturalHours : item.hoursFitted) : 0;
+    const newVal = parseInput(vals[projectId]);
+    const wasOverride = Object.prototype.hasOwnProperty.call(overrides, projectId);
+
+    if (newVal == null) {
+      // Leeg, 0, of ongeldig: wis override en zet input terug op berekende waarde
+      if (wasOverride) onSetOverride(projectId, null);
+      setVals(prev => ({ ...prev, [projectId]: formatVal(naturalHours) }));
+      return;
+    }
+    if (!wasOverride && Math.abs(newVal - naturalHours) < 0.001) {
+      // Identieke waarde → niets opslaan; normaliseer wel input voor cleanup
+      setVals(prev => ({ ...prev, [projectId]: formatVal(naturalHours) }));
+      return;
+    }
+    onSetOverride(projectId, newVal);
+    setVals(prev => ({ ...prev, [projectId]: formatVal(newVal) }));
+  };
+
+  const handleReset = (projectId) => {
+    if (Object.prototype.hasOwnProperty.call(overrides, projectId)) {
+      onSetOverride(projectId, null);
+    }
+    const item = day.fitted.find(x => x.id === projectId);
+    const naturalHours = item ? (item.isOverride ? item.naturalHours : item.hoursFitted) : 0;
+    setVals(prev => ({ ...prev, [projectId]: formatVal(naturalHours) }));
+  };
+
+  const hasAnyOverride = Object.keys(overrides).length > 0;
+  const totalNow = computeTotal();
+
+  return (
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="dh-dialog">
+        <div className="dh-header">
+          <div>
+            <h3 className="dh-title">Uren bewerken</h3>
+            <p className="dh-sub">{dayLabel}</p>
+          </div>
+          <button className="icon-btn" onClick={onClose} aria-label="Sluit"><Close size={16}/></button>
+        </div>
+
+        <div className="dh-info">
+          Pas hier de uren per project aan. Een handmatige waarde overschrijft het berekende totaal uit de sessies.
+          De originele sessies blijven bewaard — de reset-knop (↺) zet een regel terug.
+        </div>
+
+        <div className="dh-list">
+          {projects.map((p, i) => {
+            const col = getProjectColor(p, i);
+            const item = day.fitted.find(x => x.id === p.id);
+            const isOverride = Object.prototype.hasOwnProperty.call(overrides, p.id);
+            const naturalHours = item ? (item.isOverride ? item.naturalHours : item.hoursFitted) : 0;
+            return (
+              <div key={p.id} className={`dh-row ${isOverride ? 'is-override' : ''}`}>
+                <span className="dh-dot" style={{ background: col.dot }}/>
+                <div className="dh-natural-line">
+                  <span className="dh-name">{p.name}</span>
+                  {naturalHours > 0 && (
+                    <span className="dh-natural">
+                      Berekend: {fmtHours(naturalHours)}
+                      {isOverride && ' · handmatig actief'}
+                    </span>
+                  )}
+                  {naturalHours === 0 && isOverride && (
+                    <span className="dh-natural">Handmatig toegevoegd</span>
+                  )}
+                </div>
+                <div className="dh-input-wrap">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    pattern="[0-9.,]*"
+                    placeholder="0"
+                    value={vals[p.id] || ''}
+                    onChange={e => handleChange(p.id, e.target.value)}
+                    onBlur={() => handleBlur(p.id)}
+                    onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') { e.target.blur(); } }}
+                  />
+                  <span className="dh-unit">u</span>
+                </div>
+                <button
+                  className="dh-reset"
+                  onClick={() => handleReset(p.id)}
+                  disabled={!isOverride}
+                  title={isOverride ? 'Reset naar berekende waarde' : 'Geen override'}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+                  </svg>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="dh-totals">
+          <span className="dh-total-label">Totaal vandaag</span>
+          <span className="dh-total-value">{fmtHours(totalNow)}</span>
+        </div>
+
+        <div className="dh-actions">
+          <button
+            className="dh-clear-all"
+            onClick={() => { onClearAll(); onClose(); }}
+            disabled={!hasAnyOverride}
+            title={hasAnyOverride ? 'Verwijder alle handmatige aanpassingen voor deze dag' : 'Geen handmatige aanpassingen'}
+          >
+            Reset alle aanpassingen voor deze dag
+          </button>
+          <button className="btn btn-primary" onClick={onClose}>Klaar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =========================================================
 // DAGDETAIL — uitklapbaar paneel met 6-minuten breakdown
 // =========================================================
-function DayDetail({ day, projects, dayName }) {
+function DayDetail({ day, projects, dayName, activeSessionId, onUpdateSession, onDeleteSession }) {
+  const [editingId, setEditingId] = useState(null);
+
   return (
     <div className="day-detail">
       <div className="day-detail-title">{dayName} — detail per 6 minuten</div>
@@ -1189,7 +2038,14 @@ function DayDetail({ day, projects, dayName }) {
           <div key={proj.id} className="day-detail-proj">
             <div className="day-detail-proj-header">
               <span style={{width:8,height:8,borderRadius:'50%',background:col.dot,flexShrink:0,display:'inline-block'}}/>
-              <span className="day-detail-proj-name">{proj.name}</span>
+              <span className="day-detail-proj-name">
+                {proj.name}
+                {proj.isOverride && (
+                  <span title={`Handmatig ingesteld op ${fmtHours(proj.hoursFitted)} (berekend: ${fmtHours(proj.naturalHours)})`} style={{marginLeft:6,fontSize:'0.65rem',textTransform:'uppercase',letterSpacing:'0.1em',color:'var(--accent)',fontWeight:500}}>
+                    handmatig
+                  </span>
+                )}
+              </span>
               <span className="day-detail-proj-blocks">{fmtBlocks(proj.ms)}</span>
               <span className="day-detail-proj-time">{fmtHours(proj.hoursFitted)}</span>
             </div>
@@ -1200,18 +2056,52 @@ function DayDetail({ day, projects, dayName }) {
               const dur = s.clippedEnd - s.clippedStart;
               const todos = s.todos || [];
               const hasTodos = todos.length > 0;
+              const isActive = activeSessionId && s.id === activeSessionId;
+              const isEditing = editingId === s.id;
+              // Toon werkelijke (ongeclipte) starttijd als hint dat de sessie geclipt is
+              const realStart = s.startTime;
+              const realEnd   = s.endTime ?? Date.now();
+              const isClipped = realStart < s.clippedStart || realEnd > s.clippedEnd;
 
               return (
-                <div key={s.id}>
-                  <div className="day-detail-session">
-                    <span className="day-detail-session-time">
-                      {formatTimeShort(sd)}–{formatTimeShort(ed)}
-                    </span>
-                    <span className="day-detail-session-dur">
-                      {fmtBlocks(dur)} ({formatHMS(dur)})
-                    </span>
-                  </div>
-                  {hasTodos && (
+                <div key={s.id} className="session-row-wrap">
+                  {isEditing ? (
+                    <SessionEditForm
+                      session={s}
+                      onSave={async (newStart, newEnd) => {
+                        const ok = await onUpdateSession(s.id, newStart, newEnd);
+                        if (ok) setEditingId(null);
+                        return ok;
+                      }}
+                      onCancel={() => setEditingId(null)}
+                    />
+                  ) : (
+                    <div className="day-detail-session">
+                      <span className="day-detail-session-time">
+                        {formatTimeShort(sd)}–{formatTimeShort(ed)}
+                      </span>
+                      <span className="day-detail-session-dur">
+                        {fmtBlocks(dur)} ({formatHMS(dur)})
+                      </span>
+                      {isClipped && !isActive && (
+                        <span title="Sessie loopt buiten werkuren — wordt afgeknipt" style={{fontSize:'0.65rem',color:'var(--text-muted)',marginLeft:4}}>✂</span>
+                      )}
+                      {isActive && <span className="session-active-badge">loopt nu</span>}
+                      <span className="session-actions">
+                        {!isActive && (
+                          <>
+                            <button className="session-action-btn" title="Bewerk tijden" onClick={() => setEditingId(s.id)}>
+                              <Pencil size={11}/>
+                            </button>
+                            <button className="session-action-btn danger" title="Verwijder sessie" onClick={() => onDeleteSession(s.id)}>
+                              <Trash2 size={11}/>
+                            </button>
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {hasTodos && !isEditing && (
                     <div className="day-detail-todos">
                       {todos.map(todo => (
                         <div key={todo.id} className="day-detail-todo">
@@ -1232,9 +2122,61 @@ function DayDetail({ day, projects, dayName }) {
 }
 
 // =========================================================
+// SESSIE BEWERKEN — inline form in DayDetail
+// =========================================================
+function SessionEditForm({ session, onSave, onCancel }) {
+  // Werk met de WERKELIJKE (ongeclipte) starttijd & eindtijd
+  const initStart = new Date(session.startTime);
+  const initEnd   = new Date(session.endTime ?? Date.now());
+
+  const toDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const toTimeStr = (d) => `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+  const [date, setDate]       = useState(toDateStr(initStart));
+  const [startStr, setStart]  = useState(toTimeStr(initStart));
+  const [endStr, setEnd]      = useState(toTimeStr(initEnd));
+  const [error, setError]     = useState('');
+
+  // Waarschuw als sessie meerdere kalenderdagen omspant
+  const isMultiDay = toDateStr(initStart) !== toDateStr(initEnd);
+
+  const handleSave = async () => {
+    const newStart = new Date(`${date}T${startStr}`).getTime();
+    const newEnd   = new Date(`${date}T${endStr}`).getTime();
+    if (isNaN(newStart) || isNaN(newEnd)) { setError('Ongeldige datum of tijd.'); return; }
+    if (newEnd <= newStart) { setError('Eindtijd moet na begintijd liggen.'); return; }
+    if (newEnd > Date.now() + 60000) { setError('Eindtijd mag niet in de toekomst liggen.'); return; }
+    setError('');
+    const ok = await onSave(newStart, newEnd);
+    if (!ok) setError('Opslaan mislukt.');
+  };
+
+  return (
+    <div className="session-edit-form">
+      <span className="field-label">Datum</span>
+      <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+      <span className="field-label">Van</span>
+      <input type="time" value={startStr} onChange={e => setStart(e.target.value)} />
+      <span className="field-label">tot</span>
+      <input type="time" value={endStr} onChange={e => setEnd(e.target.value)} />
+      <div className="form-actions">
+        <button className="cancel-btn" onClick={onCancel}>Annuleer</button>
+        <button className="save-btn" onClick={handleSave}>Opslaan</button>
+      </div>
+      {isMultiDay && !error && (
+        <div className="session-edit-error" style={{color:'var(--text-tertiary)'}}>
+          Let op: deze sessie liep oorspronkelijk over meerdere dagen. Aanpassing zet hem op één dag.
+        </div>
+      )}
+      {error && <div className="session-edit-error">{error}</div>}
+    </div>
+  );
+}
+
+// =========================================================
 // EXPORT MODAL — opent rapport in nieuw tabblad
 // =========================================================
-function ExportModal({ projects, sessions, now, onClose }) {
+function ExportModal({ projects, sessions, now, workClip = null, overrides = {}, onClose }) {
   const [period, setPeriod] = useState('week');
 
   const { dates, label } = useMemo(() => {
@@ -1249,7 +2191,10 @@ function ExportModal({ projects, sessions, now, onClose }) {
     return { dates: ds, label: 'Week ' + wk + ' — ' + monday.getDate() + ' ' + monthNL(monday) + ' t/m ' + ds[4].getDate() + ' ' + monthNL(ds[4]) + ' ' + ds[4].getFullYear() };
   }, [period]);
 
-  const dayBlocks = useMemo(() => buildDayBlocks(dates, projects, sessions, now), [dates, projects, sessions, now]);
+  const dayBlocks = useMemo(
+    () => buildDayBlocks(dates, projects, sessions, now, workClip, overrides),
+    [dates, projects, sessions, now, workClip, overrides]
+  );
   const totalFittedAll = dayBlocks.reduce((s, d) => s + d.totalFitted, 0);
 
   const summaryProjects = useMemo(() => {
